@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.financial</groupId>
+    <groupId>com.auth</groupId>
     <artifactId>api</artifactId>
     <version>0.0.1</version>
     <relativePath>../pom.xml</relativePath>
@@ -15,15 +15,9 @@
   <artifactId>core</artifactId>
   <packaging>jar</packaging>
 
-  <name>Financial API Core</name>
+  <name>Auth API Core</name>
 
   <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>

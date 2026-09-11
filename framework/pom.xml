@@ -3,15 +3,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.financial</groupId>
+        <groupId>com.auth</groupId>
         <artifactId>api</artifactId>
         <version>0.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>com.financial.api</groupId>
     <artifactId>framework</artifactId>
-    <name>Finanancial APi Framework</name>
-    <description>Finanancial APi Framework</description>
+    <name>Auth API Framework</name>
+    <description>Auth API Framework</description>
     <properties>
         <java.version>21</java.version>
         <postgresql.version>42.7.12</postgresql.version>
@@ -103,7 +103,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.financial</groupId>
+            <groupId>com.auth</groupId>
             <artifactId>core</artifactId>
             <version>0.0.1</version>
             <scope>compile</scope>

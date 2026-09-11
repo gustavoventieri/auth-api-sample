@@ -9,11 +9,11 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>4.1.0</version>
     </parent>
-    <groupId>com.financial</groupId>
+    <groupId>com.auth</groupId>
     <artifactId>api</artifactId>
     <version>0.0.1</version>
     <packaging>pom</packaging>
-    <name>Financial API Manager</name>
+    <name>Auth API Manager</name>
 
     <properties>
         <java.version>21</java.version>
