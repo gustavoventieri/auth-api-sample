@@ -14,6 +14,7 @@ RUN ./mvnw clean package -DskipTests
 FROM sapmachine:21.0.11-jre-ubuntu AS runner
 WORKDIR /app
 
+
 RUN rm -f /etc/apt/sources.list.d/sapmachine.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl \
