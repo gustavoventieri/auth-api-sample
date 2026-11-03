@@ -45,29 +45,26 @@ public class SendResetPasswordVerificationTokenService implements SendResetPassw
     }
 
     @Override
-    public void execute(String userId) {
+    public void execute(String email) {
 
-        if (userId == null || userId.isBlank()) {
-            throw new BusinessException("User id is empty or blank");
-        }
+        if (email == null || email.isBlank()) throw new BusinessException("Email is empty");
 
-        UserDomain userDomain = userAuthenticationPersistencePort.findById(userId)
+
+        UserDomain userDomain = userAuthenticationPersistencePort.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Something went wrong"));
 
-        if (userDomain.isActive() || !userDomain.isVerified()) {
-            log.error("Cannot send reset password token for userId={}", userId);
-            throw new BusinessException("Something went wrong");
-        }
+        if (!userDomain.isActive() || !userDomain.isVerified()) throw new BusinessException("Something went wrong");
+
 
         String otpCode = generateResetPasswordVerificationTokenUseCase.execute();
         String otpHash = hashResetPasswordVerificationTokenUseCase.execute(otpCode);
 
         ResetPasswordVerificationTokenDomain token =
-                ResetPasswordVerificationTokenDomain.create(userId, otpHash);
+                ResetPasswordVerificationTokenDomain.create(userDomain.id(), otpHash);
 
         transactionManager.execute(() -> {
 
-            resetPasswordVerificationTokenPersistencePort.deleteByUserId(userId);
+            resetPasswordVerificationTokenPersistencePort.deleteByUserId(userDomain.id());
             resetPasswordVerificationTokenPersistencePort.save(token);
 
             return null;

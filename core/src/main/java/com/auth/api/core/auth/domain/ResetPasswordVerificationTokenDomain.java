@@ -19,7 +19,6 @@ public record ResetPasswordVerificationTokenDomain(
             String userId,
             String otpHash
     ) {
-
         LocalDateTime now = LocalDateTime.now();
 
         return ResetPasswordVerificationTokenDomain.builder()
@@ -44,5 +43,4 @@ public record ResetPasswordVerificationTokenDomain(
                 .usedAt(LocalDateTime.now())
                 .build();
     }
-
 }

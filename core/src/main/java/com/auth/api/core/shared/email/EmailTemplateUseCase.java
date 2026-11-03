@@ -3,7 +3,7 @@ package com.auth.api.core.shared.email;
 public interface EmailTemplateUseCase {
     String buildVerificationEmail(String otpCode);
     String buildResetPasswordEmail(String otpCode);
-
+    String buildPasswordChangedEmail(String name);
     String buildAccountCreatedEmail(
             String name,
             String otpCode

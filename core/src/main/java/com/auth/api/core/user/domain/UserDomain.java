@@ -72,4 +72,11 @@ public record UserDomain(
                 .map(word -> Character.toUpperCase(word.charAt(0)) + word.substring(1))
                 .collect(Collectors.joining(" "));
     }
+
+    public UserDomain updatePassword(String hashedPassword) {
+        return this.toBuilder()
+                .password(hashedPassword)
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
 }
