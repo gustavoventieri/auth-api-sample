@@ -1,7 +1,7 @@
 package com.auth.api.framework.auth.utils.token;
 
-import com.auth.core.auth.application.port.in.refresh.CompareRefreshTokenUseCase;
-import com.auth.core.auth.application.port.in.refresh.HashRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refresh.CompareRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refresh.HashRefreshTokenUseCase;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;

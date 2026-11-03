@@ -1,6 +1,6 @@
 package com.auth.api.framework.shared.transaction;
 
-import com.auth.core.shared.transaction.TransactionManager;
+import com.auth.api.core.shared.transaction.TransactionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 

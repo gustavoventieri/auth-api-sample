@@ -1,6 +1,6 @@
 package com.auth.api.framework.auth.utils.token;
 
-import com.auth.core.auth.application.port.in.refresh.GenerateRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refresh.GenerateRefreshTokenUseCase;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;

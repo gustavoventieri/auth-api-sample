@@ -1,7 +1,8 @@
 package com.auth.api.framework.auth.adapter.port.out.persistence;
 
-import com.auth.core.auth.application.port.out.EmailVerificationTokenPort;
-import com.auth.core.auth.domain.EmailVerificationToken;
+import com.auth.api.core.auth.application.port.out.EmailVerificationTokenPort;
+
+import com.auth.api.core.auth.domain.EmailVerificationTokenDomain;
 import com.auth.api.framework.auth.adapter.cast.EmailVerificationTokenCast;
 import com.auth.api.framework.auth.adapter.port.out.persistence.repository.SpringEmailVerificationTokenDataRepository;
 import org.springframework.stereotype.Repository;
@@ -19,12 +20,12 @@ public class EmailVerificationTokenAdapter implements EmailVerificationTokenPort
 
 
     @Override
-    public void save(EmailVerificationToken emailVerificationToken) {
+    public void save(EmailVerificationTokenDomain emailVerificationToken) {
         springEmailVerificationTokenDataRepository.save(EmailVerificationTokenCast.toEntity(emailVerificationToken));
     }
 
     @Override
-    public Optional<EmailVerificationToken> findByUserId(String userId) {
+    public Optional<EmailVerificationTokenDomain> findByUserId(String userId) {
         return springEmailVerificationTokenDataRepository.findByUserId(userId).map(EmailVerificationTokenCast::toDomain);
     }
 

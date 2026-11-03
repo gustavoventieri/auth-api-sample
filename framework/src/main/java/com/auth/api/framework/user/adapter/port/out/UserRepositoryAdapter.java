@@ -3,9 +3,9 @@ package com.auth.api.framework.user.adapter.port.out;
 
 import com.auth.api.framework.user.adapter.cast.UserCast;
 import com.auth.api.framework.user.adapter.port.out.persistence.SpringUserDataRepository;
-import com.auth.core.user.application.port.out.UserAuthenticationPersistencePort;
-import com.auth.core.user.application.port.out.UserRepositoryPort;
-import com.auth.core.user.domain.User;
+import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
+import com.auth.api.core.user.application.port.out.UserRepositoryPort;
+import com.auth.api.core.user.domain.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

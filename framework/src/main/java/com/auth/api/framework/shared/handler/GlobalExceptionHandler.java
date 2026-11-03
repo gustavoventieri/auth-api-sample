@@ -2,8 +2,8 @@ package com.auth.api.framework.shared.handler;
 
 
 import com.auth.api.framework.shared.handler.dto.ErrorResponse;
-import com.auth.core.shared.exception.BusinessException;
-import com.auth.core.shared.exception.NotFoundException;
+import com.auth.api.core.shared.exception.BusinessException;
+import com.auth.api.core.shared.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -34,17 +34,13 @@ public class GlobalExceptionHandler
         this.objectMapper = objectMapper;
     }
 
-    // =========================
-    // APPLICATION EXCEPTIONS
-    // =========================
-
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(
             NotFoundException ex,
             HttpServletRequest request
     ) {
 
-        return buildResponseEntity(
+        return buildResponse(
                 HttpStatus.NOT_FOUND,
                 ex.getMessage(),
                 request.getRequestURI()
@@ -57,7 +53,7 @@ public class GlobalExceptionHandler
             HttpServletRequest request
     ) {
 
-        return buildResponseEntity(
+        return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
                 request.getRequestURI()
@@ -80,16 +76,12 @@ public class GlobalExceptionHandler
                 )
                 .collect(Collectors.joining("; "));
 
-        return buildResponseEntity(
+        return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 message,
                 request.getRequestURI()
         );
     }
-
-    // =========================
-    // SPRING SECURITY
-    // =========================
 
     @Override
     public void commence(
@@ -98,7 +90,7 @@ public class GlobalExceptionHandler
             AuthenticationException ex
     ) throws IOException {
 
-        writeSecurityResponse(
+        buildSecurityReponse(
                 response,
                 HttpStatus.UNAUTHORIZED,
                 "Authentication required",
@@ -113,7 +105,7 @@ public class GlobalExceptionHandler
             AccessDeniedException ex
     ) throws IOException {
 
-        writeSecurityResponse(
+        buildSecurityReponse(
                 response,
                 HttpStatus.FORBIDDEN,
                 "You do not have permission to access this resource",
@@ -121,11 +113,9 @@ public class GlobalExceptionHandler
         );
     }
 
-    // =========================
-    // RESPONSE BUILDERS
-    // =========================
 
-    private ResponseEntity<ErrorResponse> buildResponseEntity(
+
+    private ResponseEntity<ErrorResponse> buildResponse(
             HttpStatusCode status,
             String message,
             String path
@@ -142,17 +132,17 @@ public class GlobalExceptionHandler
         return ResponseEntity
                 .status(status)
                 .body(
-                        ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(status.value())
-                                .error(errorDescription)
-                                .message(message)
-                                .path(path)
-                                .build()
+                      new ErrorResponse(
+                                LocalDateTime.now(),
+                                status.value(),
+                                errorDescription,
+                                message,
+                                path
+                      )
                 );
     }
 
-    private void writeSecurityResponse(
+    private void buildSecurityReponse(
             HttpServletResponse response,
             HttpStatus status,
             String message,
@@ -160,13 +150,14 @@ public class GlobalExceptionHandler
     ) throws IOException {
 
         ErrorResponse errorResponse =
-                ErrorResponse.builder()
-                        .timestamp(LocalDateTime.now())
-                        .status(status.value())
-                        .error(status.getReasonPhrase())
-                        .message(message)
-                        .path(path)
-                        .build();
+                new ErrorResponse(
+                        LocalDateTime.now(),
+                        status.value(),
+                        status.getReasonPhrase(),
+                        message,
+                        path
+                );
+
 
         response.setStatus(status.value());
         response.setContentType("application/json");

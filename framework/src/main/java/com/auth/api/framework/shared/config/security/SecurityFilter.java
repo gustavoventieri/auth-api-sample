@@ -1,9 +1,9 @@
 package com.auth.api.framework.shared.config.security;
 
-import com.auth.core.auth.application.port.in.accessToken.ExtractRoleFromAccessTokenUseCase;
-import com.auth.core.auth.application.port.in.accessToken.ExtractUserIdFromAccessTokenUseCase;
-import com.auth.core.auth.application.port.in.accessToken.ValidateAccessTokenUseCase;
-import com.auth.core.shared.enumerated.Roles;
+import com.auth.api.core.auth.application.port.in.accessToken.ExtractRoleFromAccessTokenUseCase;
+import com.auth.api.core.auth.application.port.in.accessToken.ExtractUserIdFromAccessTokenUseCase;
+import com.auth.api.core.auth.application.port.in.accessToken.ValidateAccessTokenUseCase;
+import com.auth.api.core.shared.enumerated.Roles;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;

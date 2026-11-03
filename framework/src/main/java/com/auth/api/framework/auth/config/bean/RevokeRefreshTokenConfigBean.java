@@ -1,8 +1,8 @@
 package com.auth.api.framework.auth.config.bean;
 
-import com.auth.core.auth.application.port.in.sign.RevokeRefreshTokenUseCase;
-import com.auth.core.auth.application.port.out.RefreshTokenPersistencePort;
-import com.auth.core.auth.application.service.RevokeRefreshTokenService;
+import com.auth.api.core.auth.application.port.in.sign.RevokeRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
+import com.auth.api.core.auth.application.service.RevokeRefreshTokenService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
