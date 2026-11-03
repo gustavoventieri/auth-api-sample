@@ -1,13 +1,9 @@
 package com.auth.api.framework.auth.config.bean;
 
-import com.auth.api.core.auth.application.port.in.accessToken.GenerateAccessTokenUseCase;
 import com.auth.api.core.auth.application.port.in.emailVerification.HashEmailVerificationTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refreshToken.GenerateRefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.emailVerification.VerifyEmailVerificationTokenUseCase;
-
+import com.auth.api.core.auth.application.port.in.sign.IssueAuthTokensUseCase;
 import com.auth.api.core.auth.application.port.out.EmailVerificationTokenPort;
-import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
 import com.auth.api.core.auth.application.service.VerifyEmailVerificationTokenService;
 import com.auth.api.core.shared.email.EmailPort;
 import com.auth.api.core.shared.email.EmailTemplateUseCase;
@@ -23,26 +19,20 @@ public class VerifyEmailVerificationTokenConfig {
     public VerifyEmailVerificationTokenUseCase verifyEmailVerificationTokenUseCase(
             UserAuthenticationPersistencePort userAuthenticationPort,
             EmailVerificationTokenPort emailVerificationTokenPort,
-            GenerateAccessTokenUseCase generateAccessTokenUseCase,
-            GenerateRefreshTokenUseCase generateRefreshTokenUseCase,
-            HashRefreshTokenUseCase hashRefreshTokenUseCase,
-            RefreshTokenPersistencePort refreshTokenRepositoryPort,
             HashEmailVerificationTokenUseCase hashEmailVerificationTokenUseCase,
+            IssueAuthTokensUseCase issueAuthTokensUseCase,
             TransactionManager transactionManager,
             EmailPort emailPort,
             EmailTemplateUseCase emailTemplateUseCase
-    ){
+    ) {
         return new VerifyEmailVerificationTokenService(
-            userAuthenticationPort,
-            emailVerificationTokenPort,
-            generateAccessTokenUseCase,
-            generateRefreshTokenUseCase,
-            hashRefreshTokenUseCase,
-            refreshTokenRepositoryPort,
-            hashEmailVerificationTokenUseCase,
-            transactionManager,
-            emailPort,
-            emailTemplateUseCase
+                userAuthenticationPort,
+                emailVerificationTokenPort,
+                hashEmailVerificationTokenUseCase,
+                issueAuthTokensUseCase,
+                transactionManager,
+                emailPort,
+                emailTemplateUseCase
         );
     }
 }

@@ -13,12 +13,9 @@ public record ResetPasswordVerificationTokenDomain(
         LocalDateTime expiresAt,
         LocalDateTime createdAt,
         LocalDateTime usedAt
-) {
+) implements OneTimeToken {
 
-    public static ResetPasswordVerificationTokenDomain create(
-            String userId,
-            String otpHash
-    ) {
+    public static ResetPasswordVerificationTokenDomain create(String userId, String otpHash) {
         LocalDateTime now = LocalDateTime.now();
 
         return ResetPasswordVerificationTokenDomain.builder()
@@ -26,16 +23,8 @@ public record ResetPasswordVerificationTokenDomain(
                 .userId(userId)
                 .otpCode(otpHash)
                 .createdAt(now)
-                .expiresAt(now.plusMinutes(10))
+                .expiresAt(now.plus(DEFAULT_TTL))
                 .build();
-    }
-
-    public boolean isExpired() {
-        return expiresAt.isBefore(LocalDateTime.now());
-    }
-
-    public boolean isUsed() {
-        return usedAt != null;
     }
 
     public ResetPasswordVerificationTokenDomain markAsUsed() {

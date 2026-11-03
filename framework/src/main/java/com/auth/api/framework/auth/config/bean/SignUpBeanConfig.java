@@ -11,7 +11,6 @@ import com.auth.api.core.shared.email.EmailPort;
 import com.auth.api.core.shared.email.EmailTemplateUseCase;
 import com.auth.api.core.shared.transaction.TransactionManager;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
-import com.auth.api.core.user.application.port.out.UserRepositoryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,7 +20,6 @@ public class SignUpBeanConfig {
     @Bean
     public SignUpUseCase signUpUseCaseBean(
             UserAuthenticationPersistencePort userAuthenticationPort,
-            UserRepositoryPort userRepositoryPort,
             EmailVerificationTokenPort emailVerificationTokenRepositoryPort,
             HashPasswordUseCase hashPasswordUseCase,
             GenerateEmailVerificationTokenUseCase generateEmailVerificationTokenUseCase,
@@ -32,7 +30,6 @@ public class SignUpBeanConfig {
     ){
         return new SignUpService(
                  userAuthenticationPort,
-                 userRepositoryPort,
                  emailVerificationTokenRepositoryPort,
                  hashPasswordUseCase,
                  generateEmailVerificationTokenUseCase,

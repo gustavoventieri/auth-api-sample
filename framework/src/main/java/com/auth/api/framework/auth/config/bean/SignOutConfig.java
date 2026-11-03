@@ -1,6 +1,5 @@
 package com.auth.api.framework.auth.config.bean;
 
-import com.auth.api.core.auth.application.port.in.refreshToken.CompareRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.sign.SignOutUseCase;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
@@ -15,12 +14,10 @@ public class SignOutConfig {
     @Bean
     public SignOutUseCase signOutUseCaseConfig(
             RefreshTokenPersistencePort refreshTokenRepositoryPort,
-            CompareRefreshTokenUseCase compareRefreshTokenUseCase,
             HashRefreshTokenUseCase hashRefreshTokenUseCase
     ){
         return new SignOutService(
                 refreshTokenRepositoryPort,
-                compareRefreshTokenUseCase,
                 hashRefreshTokenUseCase
         );
     }
