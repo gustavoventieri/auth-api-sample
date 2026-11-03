@@ -1,11 +1,11 @@
 package com.auth.api.core.user.application.port.out;
 
-import com.auth.api.core.user.domain.User;
+import com.auth.api.core.user.domain.UserDomain;
 
 import java.util.Optional;
 
 public interface UserRepositoryPort {
-    Optional<User> findByEmail(String email);
-    User save(User user);
-    Optional<User> findById(String id);
+    Optional<UserDomain> findByEmail(String email);
+    UserDomain save(UserDomain userDomain);
+    Optional<UserDomain> findById(String id);
 }

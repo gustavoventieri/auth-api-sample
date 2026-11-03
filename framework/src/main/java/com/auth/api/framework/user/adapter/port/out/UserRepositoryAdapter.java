@@ -1,11 +1,11 @@
 package com.auth.api.framework.user.adapter.port.out;
 
 
+import com.auth.api.core.user.domain.UserDomain;
 import com.auth.api.framework.user.adapter.cast.UserCast;
 import com.auth.api.framework.user.adapter.port.out.persistence.SpringUserDataRepository;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
 import com.auth.api.core.user.application.port.out.UserRepositoryPort;
-import com.auth.api.core.user.domain.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -20,19 +20,19 @@ public class UserRepositoryAdapter implements UserRepositoryPort, UserAuthentica
     }
 
     @Override
-    public Optional<User> findByEmail(String email) {
+    public Optional<UserDomain> findByEmail(String email) {
         return springUserDataRepository.findByEmail(email).map(UserCast::toDomain);
     }
 
     @Override
-    public User save(User user) {
+    public UserDomain save(UserDomain userDomain) {
         return UserCast.toDomain(
-                springUserDataRepository.save(UserCast.toEntity(user))
+                springUserDataRepository.save(UserCast.toEntity(userDomain))
         );
     }
 
     @Override
-    public Optional<User> findById(String id) {
+    public Optional<UserDomain> findById(String id) {
         return springUserDataRepository.findById(id).map(UserCast::toDomain);
     }
 }

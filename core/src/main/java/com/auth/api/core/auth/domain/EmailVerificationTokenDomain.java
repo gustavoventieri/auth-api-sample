@@ -13,13 +13,9 @@ public record EmailVerificationTokenDomain(
         LocalDateTime expiresAt,
         LocalDateTime createdAt,
         LocalDateTime usedAt
-) {
+) implements OneTimeToken {
 
-    public static EmailVerificationTokenDomain create(
-            String userId,
-            String otpHash
-    ) {
-
+    public static EmailVerificationTokenDomain create(String userId, String otpHash) {
         LocalDateTime now = LocalDateTime.now();
 
         return EmailVerificationTokenDomain.builder()
@@ -27,16 +23,8 @@ public record EmailVerificationTokenDomain(
                 .userId(userId)
                 .otpCode(otpHash)
                 .createdAt(now)
-                .expiresAt(now.plusMinutes(10))
+                .expiresAt(now.plus(DEFAULT_TTL))
                 .build();
-    }
-
-    public boolean isExpired() {
-        return expiresAt.isBefore(LocalDateTime.now());
-    }
-
-    public boolean isUsed() {
-        return usedAt != null;
     }
 
     public EmailVerificationTokenDomain markAsUsed() {
@@ -44,5 +32,4 @@ public record EmailVerificationTokenDomain(
                 .usedAt(LocalDateTime.now())
                 .build();
     }
-
 }

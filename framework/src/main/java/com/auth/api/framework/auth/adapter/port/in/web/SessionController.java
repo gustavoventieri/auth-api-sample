@@ -1,8 +1,8 @@
 package com.auth.api.framework.auth.adapter.port.in.web;
 
 import com.auth.api.core.auth.application.dto.response.AuthResponse;
-import com.auth.api.core.auth.application.port.in.sign.RefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.sign.RevokeRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.RenewRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.RevokeRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.sign.SignOutUseCase;
 import com.auth.api.framework.shared.dto.response.ControllerResponseDTO;
 import com.auth.api.framework.shared.handler.dto.ErrorResponse;
@@ -32,16 +32,16 @@ public class SessionController {
     private static final String ACCESS_TOKEN_NAME = "access_token";
     private static final String REFRESH_TOKEN_NAME = "refresh_token";
 
-    private final RefreshTokenUseCase refreshTokenUseCase;
+    private final RenewRefreshTokenUseCase renewRefreshTokenUseCase;
     private final RevokeRefreshTokenUseCase revokeRefreshTokenUseCase;
     private final SignOutUseCase signOutUseCase;
 
     public SessionController(
-            RefreshTokenUseCase refreshTokenUseCase,
+            RenewRefreshTokenUseCase renewRefreshTokenUseCase,
             RevokeRefreshTokenUseCase revokeRefreshTokenUseCase,
             SignOutUseCase signOutUseCase
     ) {
-        this.refreshTokenUseCase = refreshTokenUseCase;
+        this.renewRefreshTokenUseCase = renewRefreshTokenUseCase;
         this.revokeRefreshTokenUseCase = revokeRefreshTokenUseCase;
         this.signOutUseCase = signOutUseCase;
     }
@@ -77,7 +77,7 @@ public class SessionController {
         try {
 
             AuthResponse authResponse =
-                    refreshTokenUseCase.execute(refreshToken);
+                    renewRefreshTokenUseCase.execute(refreshToken);
 
             addAuthCookies(response, authResponse);
 

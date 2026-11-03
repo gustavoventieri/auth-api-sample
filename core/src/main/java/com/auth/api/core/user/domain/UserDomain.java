@@ -9,7 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Builder(toBuilder = true)
-public record User(
+public record UserDomain(
         String id,
         String name,
         String email,
@@ -21,15 +21,14 @@ public record User(
         LocalDateTime updatedAt
 ) {
 
-    public static User create(
+    public static UserDomain create(
             String name,
             String email,
             String hashedPassword
     ) {
-
         LocalDateTime now = LocalDateTime.now();
 
-        return User.builder()
+        return UserDomain.builder()
                 .id(UUID.randomUUID().toString())
                 .name(formatName(name))
                 .email(email)
@@ -42,29 +41,31 @@ public record User(
                 .build();
     }
 
-    public User verify() {
-        return this.toBuilder()
-                .isVerified(true)
-                .updatedAt(LocalDateTime.now())
-                .build();
+    public boolean isActiveAndVerified() {
+        return isActive && isVerified;
     }
 
-    public User inactivate() {
-        return this.toBuilder()
-                .isActive(false)
-                .updatedAt(LocalDateTime.now())
-                .build();
+    public UserDomain verify() {
+        return touch().isVerified(true).build();
     }
 
-    public User updateRegistration(
-            String name,
-            String hashedPassword
-    ) {
-        return this.toBuilder()
-                .name(name)
+    public UserDomain inactivate() {
+        return touch().isActive(false).build();
+    }
+
+    public UserDomain updateRegistration(String name, String hashedPassword) {
+        return touch()
+                .name(formatName(name))
                 .password(hashedPassword)
-                .updatedAt(LocalDateTime.now())
                 .build();
+    }
+
+    public UserDomain updatePassword(String hashedPassword) {
+        return touch().password(hashedPassword).build();
+    }
+
+    private UserDomainBuilder touch() {
+        return this.toBuilder().updatedAt(LocalDateTime.now());
     }
 
     private static String formatName(String name) {

@@ -2,6 +2,7 @@ package com.auth.api.core.auth.domain;
 
 import lombok.Builder;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -16,21 +17,9 @@ public record RefreshTokenDomain(
         LocalDateTime createdAt,
         LocalDateTime expiresAt,
         LocalDateTime revokedAt
-) {
+) implements ExpirableToken {
 
-    public boolean isExpired() {
-        return expiresAt.isBefore(LocalDateTime.now());
-    }
-
-    public boolean isRevoked() {
-        return revokedAt != null;
-    }
-
-    public RefreshTokenDomain revoke() {
-        return this.toBuilder()
-                .revokedAt(LocalDateTime.now())
-                .build();
-    }
+    private static final Duration TTL = Duration.ofDays(30);
 
     public static RefreshTokenDomain create(
             String userId,
@@ -47,7 +36,17 @@ public record RefreshTokenDomain(
                 .device(device)
                 .publicId(UUID.randomUUID().toString())
                 .createdAt(now)
-                .expiresAt(now.plusDays(30))
+                .expiresAt(now.plus(TTL))
+                .build();
+    }
+
+    public boolean isRevoked() {
+        return revokedAt != null;
+    }
+
+    public RefreshTokenDomain revoke() {
+        return this.toBuilder()
+                .revokedAt(LocalDateTime.now())
                 .build();
     }
 }

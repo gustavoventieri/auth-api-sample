@@ -41,6 +41,22 @@ public class ThymeleafEmailTemplateService
     }
 
     @Override
+    public String buildPasswordChangedEmail(String name) {
+
+        Context context = new Context();
+
+        context.setVariable(
+                "name",
+                name
+        );
+
+        return templateEngine.process(
+                "password-changed-email",
+                context
+        );
+    }
+
+    @Override
     public String buildAccountCreatedEmail(
             String name,
             String otpCode
@@ -103,6 +119,22 @@ public class ThymeleafEmailTemplateService
 
         return templateEngine.process(
                 "new-login-email",
+                context
+        );
+    }
+
+    @Override
+    public String buildResetPasswordEmail(String otpCode) {
+
+        Context context = new Context();
+
+        context.setVariable(
+                "otpCode",
+                otpCode
+        );
+
+        return templateEngine.process(
+                "reset-password-email",
                 context
         );
     }
