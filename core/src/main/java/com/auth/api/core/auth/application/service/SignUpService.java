@@ -13,7 +13,7 @@ import com.auth.api.core.shared.email.EmailPort;
 import com.auth.api.core.shared.transaction.TransactionManager;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
 import com.auth.api.core.user.application.port.out.UserRepositoryPort;
-import com.auth.api.core.user.domain.User;
+import com.auth.api.core.user.domain.UserDomain;
 
 public class SignUpService implements SignUpUseCase {
 
@@ -57,15 +57,15 @@ public class SignUpService implements SignUpUseCase {
     @Override
     public String execute(String name, String email, String password) {
 
-        User user = userAuthenticationPort.findByEmail(email).orElse(null);
+        UserDomain userDomain = userAuthenticationPort.findByEmail(email).orElse(null);
 
-        if (user != null) {
+        if (userDomain != null) {
 
-            if (user.isVerified()) {
+            if (userDomain.isVerified()) {
                 throw new BusinessException("Email already registered");
             }
 
-            handlePendingRegistration(user, name, password);
+            handlePendingRegistration(userDomain, name, password);
 
             return SUCCESS_MESSAGE;
         }
@@ -76,7 +76,7 @@ public class SignUpService implements SignUpUseCase {
 
         String otpHash = hashEmailVerificationTokenUseCase.execute(otpCode);
 
-        User newUser = User.create(
+        UserDomain newUserDomain = UserDomain.create(
                 name,
                 email,
                 hashedPassword
@@ -84,11 +84,11 @@ public class SignUpService implements SignUpUseCase {
 
         transactionManager.execute(() -> {
 
-            userRepositoryPort.save(newUser);
+            userRepositoryPort.save(newUserDomain);
 
             EmailVerificationTokenDomain emailVerificationToken =
                     EmailVerificationTokenDomain.create(
-                            newUser.id(),
+                            newUserDomain.id(),
                             otpHash
                     );
 
@@ -99,7 +99,7 @@ public class SignUpService implements SignUpUseCase {
 
         emailPort.send(
                 new EmailMessage(
-                        newUser.email(),
+                        newUserDomain.email(),
                         "Verify your account",
                         emailTemplateUseCase.buildVerificationEmail(otpCode)
                 )
@@ -109,7 +109,7 @@ public class SignUpService implements SignUpUseCase {
     }
 
     private void handlePendingRegistration(
-            User user,
+            UserDomain userDomain,
             String name,
             String password
     ) {
@@ -120,20 +120,20 @@ public class SignUpService implements SignUpUseCase {
 
         String otpHash = hashEmailVerificationTokenUseCase.execute(otpCode);
 
-        User updatedUser = user.updateRegistration(
+        UserDomain updatedUserDomain = userDomain.updateRegistration(
                 name,
                 hashedPassword
         );
 
         transactionManager.execute(() -> {
 
-            userRepositoryPort.save(updatedUser);
+            userRepositoryPort.save(updatedUserDomain);
 
-            emailVerificationTokenRepositoryPort.deleteByUserId(updatedUser.id());
+            emailVerificationTokenRepositoryPort.deleteByUserId(updatedUserDomain.id());
 
             EmailVerificationTokenDomain token =
                     EmailVerificationTokenDomain.create(
-                            updatedUser.id(),
+                            updatedUserDomain.id(),
                             otpHash
                     );
 
@@ -144,7 +144,7 @@ public class SignUpService implements SignUpUseCase {
 
         emailPort.send(
                 new EmailMessage(
-                        updatedUser.email(),
+                        updatedUserDomain.email(),
                         "Verify your account",
                         emailTemplateUseCase.buildVerificationEmail(otpCode)
                 )

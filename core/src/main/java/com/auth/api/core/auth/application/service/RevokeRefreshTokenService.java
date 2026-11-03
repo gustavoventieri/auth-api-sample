@@ -1,6 +1,6 @@
 package com.auth.api.core.auth.application.service;
 
-import com.auth.api.core.auth.application.port.in.sign.RevokeRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.RevokeRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
 import com.auth.api.core.auth.domain.RefreshTokenDomain;
 import com.auth.api.core.shared.exception.BusinessException;

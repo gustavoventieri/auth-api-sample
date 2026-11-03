@@ -2,8 +2,8 @@ package com.auth.api.framework.auth.config.bean;
 
 import com.auth.api.core.auth.application.port.in.accessToken.GenerateAccessTokenUseCase;
 import com.auth.api.core.auth.application.port.in.password.ComparePasswordUseCase;
-import com.auth.api.core.auth.application.port.in.refresh.GenerateRefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refresh.HashRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.GenerateRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.sign.SignInUseCase;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
 import com.auth.api.core.auth.application.service.SignInService;

@@ -3,9 +3,9 @@ package com.auth.api.core.auth.application.service;
 import com.auth.api.core.auth.application.dto.response.AuthResponse;
 import com.auth.api.core.auth.application.port.in.accessToken.GenerateAccessTokenUseCase;
 import com.auth.api.core.auth.application.port.in.emailVerification.HashEmailVerificationTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refresh.GenerateRefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refresh.HashRefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.sign.VerifyEmailVerificationTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.GenerateRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.emailVerification.VerifyEmailVerificationTokenUseCase;
 import com.auth.api.core.auth.application.port.out.EmailVerificationTokenPort;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
 import com.auth.api.core.auth.domain.EmailVerificationTokenDomain;
@@ -16,7 +16,7 @@ import com.auth.api.core.shared.email.EmailTemplateUseCase;
 import com.auth.api.core.shared.exception.BusinessException;
 import com.auth.api.core.shared.transaction.TransactionManager;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
-import com.auth.api.core.user.domain.User;
+import com.auth.api.core.user.domain.UserDomain;
 
 public class VerifyEmailVerificationTokenService implements VerifyEmailVerificationTokenUseCase {
 
@@ -66,13 +66,13 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
             String device
     ) {
 
-        User user = userAuthenticationPort.findByEmail(email)
+        UserDomain userDomain = userAuthenticationPort.findByEmail(email)
                 .orElseThrow(() ->
                         new BusinessException("Invalid verification code")
                 );
 
         EmailVerificationTokenDomain token =
-                emailVerificationTokenPort.findByUserId(user.id())
+                emailVerificationTokenPort.findByUserId(userDomain.id())
                         .orElseThrow(() ->
                                 new BusinessException("Invalid verification code")
                         );
@@ -92,7 +92,7 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
             throw new BusinessException("Invalid verification code");
         }
 
-        User verifiedUser = user.verify();
+        UserDomain verifiedUserDomain = userDomain.verify();
 
         EmailVerificationTokenDomain usedToken =
                 token.markAsUsed();
@@ -105,7 +105,7 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
 
         RefreshTokenDomain newRefreshToken =
                 RefreshTokenDomain.create(
-                        verifiedUser.id(),
+                        verifiedUserDomain.id(),
                         refreshTokenHash,
                         ip,
                         device
@@ -113,7 +113,7 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
 
         transactionManager.execute(() -> {
 
-            userAuthenticationPort.save(verifiedUser);
+            userAuthenticationPort.save(verifiedUserDomain);
 
             emailVerificationTokenPort.save(usedToken);
 
@@ -124,16 +124,16 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
 
         String accessToken =
                 generateAccessTokenUseCase.execute(
-                        verifiedUser.id(),
-                        verifiedUser.role()
+                        verifiedUserDomain.id(),
+                        verifiedUserDomain.role()
                 );
 
         emailPort.send(
                 new EmailMessage(
-                        verifiedUser.email(),
+                        verifiedUserDomain.email(),
                         "Your account was created",
                         emailTemplateUseCase.buildAccountCreatedEmail(
-                                verifiedUser.name(),
+                                verifiedUserDomain.name(),
                                 otpCode
                         )
                 )
