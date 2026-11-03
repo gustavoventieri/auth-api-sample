@@ -41,6 +41,22 @@ public class ThymeleafEmailTemplateService
     }
 
     @Override
+    public String buildPasswordChangedEmail(String name) {
+
+        Context context = new Context();
+
+        context.setVariable(
+                "name",
+                name
+        );
+
+        return templateEngine.process(
+                "password-changed-email",
+                context
+        );
+    }
+
+    @Override
     public String buildAccountCreatedEmail(
             String name,
             String otpCode
