@@ -26,7 +26,6 @@ public record UserDomain(
             String email,
             String hashedPassword
     ) {
-
         LocalDateTime now = LocalDateTime.now();
 
         return UserDomain.builder()
@@ -42,41 +41,36 @@ public record UserDomain(
                 .build();
     }
 
+    public boolean isActiveAndVerified() {
+        return isActive && isVerified;
+    }
+
     public UserDomain verify() {
-        return this.toBuilder()
-                .isVerified(true)
-                .updatedAt(LocalDateTime.now())
-                .build();
+        return touch().isVerified(true).build();
     }
 
     public UserDomain inactivate() {
-        return this.toBuilder()
-                .isActive(false)
-                .updatedAt(LocalDateTime.now())
+        return touch().isActive(false).build();
+    }
+
+    public UserDomain updateRegistration(String name, String hashedPassword) {
+        return touch()
+                .name(formatName(name))
+                .password(hashedPassword)
                 .build();
     }
 
-    public UserDomain updateRegistration(
-            String name,
-            String hashedPassword
-    ) {
-        return this.toBuilder()
-                .name(name)
-                .password(hashedPassword)
-                .updatedAt(LocalDateTime.now())
-                .build();
+    public UserDomain updatePassword(String hashedPassword) {
+        return touch().password(hashedPassword).build();
+    }
+
+    private UserDomainBuilder touch() {
+        return this.toBuilder().updatedAt(LocalDateTime.now());
     }
 
     private static String formatName(String name) {
         return Arrays.stream(name.trim().toLowerCase().split("\\s+"))
                 .map(word -> Character.toUpperCase(word.charAt(0)) + word.substring(1))
                 .collect(Collectors.joining(" "));
-    }
-
-    public UserDomain updatePassword(String hashedPassword) {
-        return this.toBuilder()
-                .password(hashedPassword)
-                .updatedAt(LocalDateTime.now())
-                .build();
     }
 }

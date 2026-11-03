@@ -73,14 +73,15 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         Cookie[] cookies = request.getCookies();
 
+        if (cookies == null) {
+            return null;
+        }
 
         for (Cookie cookie : cookies) {
-
             if (ACCESS_TOKEN_NAME.equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }
-
 
         return null;
     }

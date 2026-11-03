@@ -1,19 +1,17 @@
 package com.auth.api.framework.auth.utils.token;
 
 import com.auth.api.core.auth.application.port.in.emailVerification.GenerateEmailVerificationTokenUseCase;
+import com.auth.api.core.auth.application.port.in.password.reset.GenerateResetPasswordVerificationTokenUseCase;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 
 @Component
-public class EmailVerificationTokenGenerator
-        implements GenerateEmailVerificationTokenUseCase {
+public class OtpCodeGenerator implements
+        GenerateEmailVerificationTokenUseCase,
+        GenerateResetPasswordVerificationTokenUseCase {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
-    public EmailVerificationTokenGenerator(){
-
-    }
 
     @Override
     public String execute() {

@@ -9,6 +9,9 @@ public final class SecurityEndpoints {
             "/auth/sign-in",
             "/auth/sign-up",
             "/auth/verify-email",
+            "/auth/password/forgot",
+            "/auth/password/verify",
+            "/auth/password/reset",
 
             "/sessions/refresh",
 
@@ -23,6 +26,9 @@ public final class SecurityEndpoints {
             "/auth/sign-in",
             "/auth/sign-up",
             "/auth/verify-email",
+            "/auth/password/forgot",
+            "/auth/password/verify",
+            "/auth/password/reset",
             "/sessions/refresh",
             "/sessions/logout"
     };
@@ -31,6 +37,9 @@ public final class SecurityEndpoints {
         return path.equals("/auth/sign-in")
                 || path.equals("/auth/sign-up")
                 || path.equals("/auth/verify-email")
+                || path.equals("/auth/password/forgot")
+                || path.equals("/auth/password/verify")
+                || path.equals("/auth/password/reset")
                 || path.equals("/sessions/refresh")
                 || path.equals("/scalar")
                 || path.startsWith("/scalar/")

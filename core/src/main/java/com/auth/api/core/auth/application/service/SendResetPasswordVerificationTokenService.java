@@ -8,12 +8,12 @@ import com.auth.api.core.auth.domain.ResetPasswordVerificationTokenDomain;
 import com.auth.api.core.shared.email.EmailMessage;
 import com.auth.api.core.shared.email.EmailPort;
 import com.auth.api.core.shared.email.EmailTemplateUseCase;
-import com.auth.api.core.shared.exception.BusinessException;
-import com.auth.api.core.shared.exception.NotFoundException;
 import com.auth.api.core.shared.transaction.TransactionManager;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
 import com.auth.api.core.user.domain.UserDomain;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.auth.api.core.shared.util.ValidationUtils.requireNotBlank;
 
 @Slf4j
 public class SendResetPasswordVerificationTokenService implements SendResetPasswordVerificationTokenUseCase {
@@ -47,14 +47,16 @@ public class SendResetPasswordVerificationTokenService implements SendResetPassw
     @Override
     public void execute(String email) {
 
-        if (email == null || email.isBlank()) throw new BusinessException("Email is empty");
-
+        requireNotBlank(email, "Email is empty");
 
         UserDomain userDomain = userAuthenticationPersistencePort.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Something went wrong"));
+                .filter(UserDomain::isActiveAndVerified)
+                .orElse(null);
 
-        if (!userDomain.isActive() || !userDomain.isVerified()) throw new BusinessException("Something went wrong");
-
+        if (userDomain == null) {
+            log.info("Reset password requested for unknown or ineligible email");
+            return;
+        }
 
         String otpCode = generateResetPasswordVerificationTokenUseCase.execute();
         String otpHash = hashResetPasswordVerificationTokenUseCase.execute(otpCode);
@@ -62,12 +64,9 @@ public class SendResetPasswordVerificationTokenService implements SendResetPassw
         ResetPasswordVerificationTokenDomain token =
                 ResetPasswordVerificationTokenDomain.create(userDomain.id(), otpHash);
 
-        transactionManager.execute(() -> {
-
+        transactionManager.run(() -> {
             resetPasswordVerificationTokenPersistencePort.deleteByUserId(userDomain.id());
             resetPasswordVerificationTokenPersistencePort.save(token);
-
-            return null;
         });
 
         emailPort.send(

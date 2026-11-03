@@ -12,7 +12,6 @@ import com.auth.api.core.shared.exception.BusinessException;
 import com.auth.api.core.shared.email.EmailPort;
 import com.auth.api.core.shared.transaction.TransactionManager;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
-import com.auth.api.core.user.application.port.out.UserRepositoryPort;
 import com.auth.api.core.user.domain.UserDomain;
 
 public class SignUpService implements SignUpUseCase {
@@ -21,7 +20,6 @@ public class SignUpService implements SignUpUseCase {
             "If the registration can proceed, a verification code has been sent to the provided email.";
 
     private final UserAuthenticationPersistencePort userAuthenticationPort;
-    private final UserRepositoryPort userRepositoryPort;
     private final EmailVerificationTokenPort emailVerificationTokenRepositoryPort;
 
     private final HashPasswordUseCase hashPasswordUseCase;
@@ -34,7 +32,6 @@ public class SignUpService implements SignUpUseCase {
 
     public SignUpService(
             UserAuthenticationPersistencePort userAuthenticationPort,
-            UserRepositoryPort userRepositoryPort,
             EmailVerificationTokenPort emailVerificationTokenRepositoryPort,
             HashPasswordUseCase hashPasswordUseCase,
             GenerateEmailVerificationTokenUseCase generateEmailVerificationTokenUseCase,
@@ -44,7 +41,6 @@ public class SignUpService implements SignUpUseCase {
             TransactionManager transactionManager
     ) {
         this.userAuthenticationPort = userAuthenticationPort;
-        this.userRepositoryPort = userRepositoryPort;
         this.emailVerificationTokenRepositoryPort = emailVerificationTokenRepositoryPort;
         this.hashPasswordUseCase = hashPasswordUseCase;
         this.generateEmailVerificationTokenUseCase = generateEmailVerificationTokenUseCase;
@@ -57,97 +53,44 @@ public class SignUpService implements SignUpUseCase {
     @Override
     public String execute(String name, String email, String password) {
 
-        UserDomain userDomain = userAuthenticationPort.findByEmail(email).orElse(null);
+        UserDomain existingUser = userAuthenticationPort.findByEmail(email).orElse(null);
 
-        if (userDomain != null) {
-
-            if (userDomain.isVerified()) {
-                throw new BusinessException("Email already registered");
-            }
-
-            handlePendingRegistration(userDomain, name, password);
-
-            return SUCCESS_MESSAGE;
+        if (existingUser != null && existingUser.isVerified()) {
+            throw new BusinessException("Email already registered");
         }
 
         String hashedPassword = hashPasswordUseCase.execute(password);
 
-        String otpCode = generateEmailVerificationTokenUseCase.execute();
+        boolean isPendingRegistration = existingUser != null;
 
+        UserDomain userDomain = isPendingRegistration
+                ? existingUser.updateRegistration(name, hashedPassword)
+                : UserDomain.create(name, email, hashedPassword);
+
+        String otpCode = generateEmailVerificationTokenUseCase.execute();
         String otpHash = hashEmailVerificationTokenUseCase.execute(otpCode);
 
-        UserDomain newUserDomain = UserDomain.create(
-                name,
-                email,
-                hashedPassword
-        );
+        EmailVerificationTokenDomain token =
+                EmailVerificationTokenDomain.create(userDomain.id(), otpHash);
 
-        transactionManager.execute(() -> {
+        transactionManager.run(() -> {
+            userAuthenticationPort.save(userDomain);
 
-            userRepositoryPort.save(newUserDomain);
+            if (isPendingRegistration) {
+                emailVerificationTokenRepositoryPort.deleteByUserId(userDomain.id());
+            }
 
-            EmailVerificationTokenDomain emailVerificationToken =
-                    EmailVerificationTokenDomain.create(
-                            newUserDomain.id(),
-                            otpHash
-                    );
-
-            emailVerificationTokenRepositoryPort.save(emailVerificationToken);
-
-            return null;
+            emailVerificationTokenRepositoryPort.save(token);
         });
 
         emailPort.send(
                 new EmailMessage(
-                        newUserDomain.email(),
+                        userDomain.email(),
                         "Verify your account",
                         emailTemplateUseCase.buildVerificationEmail(otpCode)
                 )
         );
 
         return SUCCESS_MESSAGE;
-    }
-
-    private void handlePendingRegistration(
-            UserDomain userDomain,
-            String name,
-            String password
-    ) {
-
-        String hashedPassword = hashPasswordUseCase.execute(password);
-
-        String otpCode = generateEmailVerificationTokenUseCase.execute();
-
-        String otpHash = hashEmailVerificationTokenUseCase.execute(otpCode);
-
-        UserDomain updatedUserDomain = userDomain.updateRegistration(
-                name,
-                hashedPassword
-        );
-
-        transactionManager.execute(() -> {
-
-            userRepositoryPort.save(updatedUserDomain);
-
-            emailVerificationTokenRepositoryPort.deleteByUserId(updatedUserDomain.id());
-
-            EmailVerificationTokenDomain token =
-                    EmailVerificationTokenDomain.create(
-                            updatedUserDomain.id(),
-                            otpHash
-                    );
-
-            emailVerificationTokenRepositoryPort.save(token);
-
-            return null;
-        });
-
-        emailPort.send(
-                new EmailMessage(
-                        updatedUserDomain.email(),
-                        "Verify your account",
-                        emailTemplateUseCase.buildVerificationEmail(otpCode)
-                )
-        );
     }
 }
