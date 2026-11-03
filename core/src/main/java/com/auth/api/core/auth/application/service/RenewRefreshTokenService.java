@@ -2,20 +2,20 @@ package com.auth.api.core.auth.application.service;
 
 import com.auth.api.core.auth.application.dto.response.AuthResponse;
 import com.auth.api.core.auth.application.port.in.accessToken.GenerateAccessTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refresh.CompareRefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refresh.HashRefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.sign.RefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.CompareRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.RenewRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
 
 import com.auth.api.core.auth.domain.RefreshTokenDomain;
 import com.auth.api.core.shared.exception.BusinessException;
 import com.auth.api.core.shared.exception.NotFoundException;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
-import com.auth.api.core.user.domain.User;
+import com.auth.api.core.user.domain.UserDomain;
 
 
 
-public class RefreshTokenService implements RefreshTokenUseCase {
+public class RenewRefreshTokenService implements RenewRefreshTokenUseCase {
 
     private final RefreshTokenPersistencePort refreshTokenRepositoryPort;
     private final UserAuthenticationPersistencePort userAuthenticationPersistencePort;
@@ -23,7 +23,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
     private final GenerateAccessTokenUseCase generateAccessTokenUseCase;
     private final HashRefreshTokenUseCase hashRefreshTokenUseCase;
 
-    public RefreshTokenService(
+    public RenewRefreshTokenService(
             RefreshTokenPersistencePort refreshTokenRepositoryPort,
             UserAuthenticationPersistencePort userAuthenticationPersistencePort,
             CompareRefreshTokenUseCase compareRefreshTokenUseCase,
@@ -64,14 +64,14 @@ public class RefreshTokenService implements RefreshTokenUseCase {
             throw new BusinessException("Invalid refresh token");
         }
 
-        User user = userAuthenticationPersistencePort.findById(storedToken.userId())
+        UserDomain userDomain = userAuthenticationPersistencePort.findById(storedToken.userId())
                 .orElseThrow(() ->
                         new NotFoundException("User Not Found")
                 );;
 
         String accessToken = generateAccessTokenUseCase.execute(
                 storedToken.userId(),
-                user.role()
+                userDomain.role()
         );
 
         return new AuthResponse(

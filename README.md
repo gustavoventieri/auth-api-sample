@@ -112,7 +112,7 @@ auth-api-sample/
 │       │       ├── port/in/       # Use Cases (SignIn, SignUp, RefreshToken...)
 │       │       ├── port/out/      # Contratos de persistência/infra
 │       │       └── service/       # Implementação das regras de negócio
-│       ├── user/
+│       ├── userDomain/
 │       │   ├── domain/            # User
 │       │   └── application/       # Use Cases + Services de usuário
 │       └── shared/                # Exceptions, enums (Roles), e-mail, transação
@@ -123,7 +123,7 @@ auth-api-sample/
         │   ├── adapter/port/in/web/   # AuthController, SessionController
         │   ├── adapter/port/out/      # Adapters JPA (RefreshToken, EmailVerification)
         │   └── utils/                 # JWT, hashing, BCrypt, geração de tokens
-        ├── user/                      # UserController + adapters de persistência
+        ├── userDomain/                      # UserController + adapters de persistência
         └── shared/
             ├── config/security/       # SecurityConfig, SecurityFilter, RBAC custom
             ├── config/openApi/        # Configuração do Swagger/Scalar

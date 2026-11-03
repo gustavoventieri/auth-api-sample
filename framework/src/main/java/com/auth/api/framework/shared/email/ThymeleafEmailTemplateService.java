@@ -107,5 +107,21 @@ public class ThymeleafEmailTemplateService
         );
     }
 
+    @Override
+    public String buildResetPasswordEmail(String otpCode) {
+
+        Context context = new Context();
+
+        context.setVariable(
+                "otpCode",
+                otpCode
+        );
+
+        return templateEngine.process(
+                "reset-password-email",
+                context
+        );
+    }
+
 
 }

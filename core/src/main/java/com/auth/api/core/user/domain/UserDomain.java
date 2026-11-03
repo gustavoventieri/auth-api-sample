@@ -9,7 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Builder(toBuilder = true)
-public record User(
+public record UserDomain(
         String id,
         String name,
         String email,
@@ -21,7 +21,7 @@ public record User(
         LocalDateTime updatedAt
 ) {
 
-    public static User create(
+    public static UserDomain create(
             String name,
             String email,
             String hashedPassword
@@ -29,7 +29,7 @@ public record User(
 
         LocalDateTime now = LocalDateTime.now();
 
-        return User.builder()
+        return UserDomain.builder()
                 .id(UUID.randomUUID().toString())
                 .name(formatName(name))
                 .email(email)
@@ -42,21 +42,21 @@ public record User(
                 .build();
     }
 
-    public User verify() {
+    public UserDomain verify() {
         return this.toBuilder()
                 .isVerified(true)
                 .updatedAt(LocalDateTime.now())
                 .build();
     }
 
-    public User inactivate() {
+    public UserDomain inactivate() {
         return this.toBuilder()
                 .isActive(false)
                 .updatedAt(LocalDateTime.now())
                 .build();
     }
 
-    public User updateRegistration(
+    public UserDomain updateRegistration(
             String name,
             String hashedPassword
     ) {

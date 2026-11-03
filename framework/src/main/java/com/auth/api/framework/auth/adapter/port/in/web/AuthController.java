@@ -3,7 +3,7 @@ package com.auth.api.framework.auth.adapter.port.in.web;
 import com.auth.api.core.auth.application.dto.response.AuthResponse;
 import com.auth.api.core.auth.application.port.in.sign.SignInUseCase;
 import com.auth.api.core.auth.application.port.in.sign.SignUpUseCase;
-import com.auth.api.core.auth.application.port.in.sign.VerifyEmailVerificationTokenUseCase;
+import com.auth.api.core.auth.application.port.in.emailVerification.VerifyEmailVerificationTokenUseCase;
 import com.auth.api.framework.auth.adapter.dto.EmailVerificationRequestValidator;
 import com.auth.api.framework.auth.adapter.dto.SignInRequestValidator;
 import com.auth.api.framework.auth.adapter.dto.SignUpRequestValidator;

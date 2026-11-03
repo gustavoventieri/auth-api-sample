@@ -2,9 +2,9 @@ package com.auth.api.framework.auth.config.bean;
 
 import com.auth.api.core.auth.application.port.in.accessToken.GenerateAccessTokenUseCase;
 import com.auth.api.core.auth.application.port.in.emailVerification.HashEmailVerificationTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refresh.GenerateRefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.refresh.HashRefreshTokenUseCase;
-import com.auth.api.core.auth.application.port.in.sign.VerifyEmailVerificationTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.GenerateRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.emailVerification.VerifyEmailVerificationTokenUseCase;
 
 import com.auth.api.core.auth.application.port.out.EmailVerificationTokenPort;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;

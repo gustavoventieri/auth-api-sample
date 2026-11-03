@@ -1,26 +1,26 @@
 package com.auth.api.framework.user.adapter.cast;
 
+import com.auth.api.core.user.domain.UserDomain;
 import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
-import com.auth.api.core.user.domain.User;
 
 public class UserCast {
 
-    public static UserEntity toEntity(User user) {
+    public static UserEntity toEntity(UserDomain userDomain) {
         return UserEntity.builder()
-                .id(user.id())
-                .name(user.name())
-                .email(user.email())
-                .password(user.password())
-                .role(user.role())
-                .verified(user.isVerified())
-                .active(user.isActive())
-                .createdAt(user.createdAt())
-                .updatedAt(user.updatedAt())
+                .id(userDomain.id())
+                .name(userDomain.name())
+                .email(userDomain.email())
+                .password(userDomain.password())
+                .role(userDomain.role())
+                .verified(userDomain.isVerified())
+                .active(userDomain.isActive())
+                .createdAt(userDomain.createdAt())
+                .updatedAt(userDomain.updatedAt())
                 .build();
     }
 
-    public static User toDomain(UserEntity entity) {
-        return new User(
+    public static UserDomain toDomain(UserEntity entity) {
+        return new UserDomain(
                 entity.getId(),
                 entity.getName(),
                 entity.getEmail(),
