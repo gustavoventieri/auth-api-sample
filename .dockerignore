@@ -1,0 +1,14 @@
+# Allowlist: só entra no contexto de build o necessário para compilar.
+*
+!pom.xml
+!core/pom.xml
+!core/src/main/
+!framework/pom.xml
+!framework/mvnw
+!framework/.mvn/wrapper/maven-wrapper.properties
+!framework/src/main/
+
+# Nunca enviar segredos para o build, mesmo se estiverem dentro de src/.
+**/env.properties
+**/*.env
+**/.env

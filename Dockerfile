@@ -1,33 +1,39 @@
-FROM sapmachine:21.0.11-ubuntu AS builder
+############################
+# Build
+############################
+FROM eclipse-temurin:21.0.13_9-jdk-alpine-3.24 AS builder
+WORKDIR /build
+
+COPY framework/mvnw ./mvnw
+COPY framework/.mvn ./.mvn
+COPY pom.xml ./
+COPY core/pom.xml core/
+COPY framework/pom.xml framework/
+COPY core/src/main core/src/main
+COPY framework/src/main framework/src/main
+
+RUN chmod +x mvnw \
+    && ./mvnw -B -q clean package -DskipTests \
+    && cp framework/target/framework-*.jar /build/app.jar
+
+############################
+# Runtime
+############################
+FROM eclipse-temurin:21.0.13_9-jre-alpine-3.24 AS runner
+
+# Aplica os patches de segurança do Alpine e remove o gnupg, que não é usado em runtime.
+RUN apk upgrade --no-cache \
+    && apk del --no-cache gnupg
+
+# Usuário de sistema sem shell, sem home e com UID/GID fixos (compatível com runAsNonRoot).
+RUN addgroup -S -g 10001 appuser \
+    && adduser -S -D -H -u 10001 -G appuser -h /nonexistent -s /sbin/nologin appuser
+
 WORKDIR /app
 
-COPY . .
+# O jar pertence ao root (0644): o processo da aplicação só consegue lê-lo.
+COPY --from=builder /build/app.jar /app/app.jar
 
-COPY framework/mvnw .
-COPY framework/.mvn .mvn
+USER 10001:10001
 
-RUN chmod +x ./mvnw
-
-RUN ./mvnw clean package -DskipTests
-
-
-FROM sapmachine:21.0.11-jre-ubuntu AS runner
-WORKDIR /app
-
-
-RUN rm -f /etc/apt/sources.list.d/sapmachine.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl \
-    && apt-get install -y --only-upgrade libcap2 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-COPY --from=builder /app/framework/target/*.jar app.jar
-
-RUN chown -R appuser:appuser /app
-
-USER appuser
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:+ExitOnOutOfMemoryError", "-jar", "/app/app.jar"]
