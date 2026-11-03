@@ -1,6 +1,6 @@
 package com.auth.api.framework.shared.email;
 
-import com.auth.core.shared.email.EmailTemplateUseCase;
+import com.auth.api.core.shared.email.EmailTemplateUseCase;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -29,6 +29,8 @@ public class ThymeleafEmailTemplateService
                 "otpCode",
                 otpCode
         );
+        
+        
 
 
 

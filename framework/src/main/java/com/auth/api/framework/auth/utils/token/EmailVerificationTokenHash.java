@@ -1,6 +1,6 @@
 package com.auth.api.framework.auth.utils.token;
 
-import com.auth.core.auth.application.port.in.emailVerification.HashEmailVerificationTokenUseCase;
+import com.auth.api.core.auth.application.port.in.emailVerification.HashEmailVerificationTokenUseCase;
 import com.auth.api.framework.auth.utils.hash.Hasher256Service;
 import org.springframework.stereotype.Component;
 

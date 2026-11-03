@@ -1,6 +1,6 @@
 package com.auth.api.framework.shared.config.security.annotations;
 
-import com.auth.core.shared.enumerated.Roles;
+import com.auth.api.core.shared.enumerated.Roles;
 
 import java.lang.annotation.*;
 

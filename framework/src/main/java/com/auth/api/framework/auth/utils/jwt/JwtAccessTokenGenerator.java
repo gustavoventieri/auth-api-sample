@@ -2,8 +2,8 @@ package com.auth.api.framework.auth.utils.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth.core.auth.application.port.in.accessToken.GenerateAccessTokenUseCase;
-import com.auth.core.shared.enumerated.Roles;
+import com.auth.api.core.auth.application.port.in.accessToken.GenerateAccessTokenUseCase;
+import com.auth.api.core.shared.enumerated.Roles;
 
 import org.springframework.stereotype.Component;
 

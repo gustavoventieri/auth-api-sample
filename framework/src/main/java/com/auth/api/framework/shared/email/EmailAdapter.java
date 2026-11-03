@@ -2,13 +2,13 @@ package com.auth.api.framework.shared.email;
 
 import java.nio.charset.StandardCharsets;
 
-import com.auth.core.shared.email.EmailSendException;
+import com.auth.api.core.shared.email.EmailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-import com.auth.core.shared.email.EmailMessage;
-import com.auth.core.shared.email.EmailPort;
+import com.auth.api.core.shared.email.EmailMessage;
+import com.auth.api.core.shared.email.EmailPort;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

@@ -1,12 +1,12 @@
 package com.auth.api.framework.auth.adapter.port.in.web;
 
-import com.auth.core.auth.application.dto.response.AuthResponse;
-import com.auth.core.auth.application.port.in.sign.RefreshTokenUseCase;
-import com.auth.core.auth.application.port.in.sign.RevokeRefreshTokenUseCase;
-import com.auth.core.auth.application.port.in.sign.SignOutUseCase;
+import com.auth.api.core.auth.application.dto.response.AuthResponse;
+import com.auth.api.core.auth.application.port.in.sign.RefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.sign.RevokeRefreshTokenUseCase;
+import com.auth.api.core.auth.application.port.in.sign.SignOutUseCase;
 import com.auth.api.framework.shared.dto.response.ControllerResponseDTO;
 import com.auth.api.framework.shared.handler.dto.ErrorResponse;
-import com.auth.core.shared.exception.BusinessException;
+import com.auth.api.core.shared.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

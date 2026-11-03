@@ -1,12 +1,12 @@
 package com.auth.api.framework.auth.adapter.cast;
 
-import com.auth.core.auth.domain.RefreshToken;
+import com.auth.api.core.auth.domain.RefreshTokenDomain;
 import com.auth.api.framework.auth.adapter.port.out.persistence.entity.RefreshTokenEntity;
 import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
 
 public class RefreshTokenCast {
 
-    public static RefreshTokenEntity toEntity(RefreshToken token) {
+    public static RefreshTokenEntity toEntity(RefreshTokenDomain token) {
 
         return RefreshTokenEntity.builder()
                 .id(token.id())
@@ -25,9 +25,9 @@ public class RefreshTokenCast {
                 .build();
     }
 
-    public static RefreshToken toDomain(RefreshTokenEntity entity) {
+    public static RefreshTokenDomain toDomain(RefreshTokenEntity entity) {
 
-        return new RefreshToken(
+        return new RefreshTokenDomain(
                 entity.getId(),
                 entity.getUser().getId(),
                 entity.getTokenHash(),

@@ -1,7 +1,7 @@
 package com.auth.api.framework.user.adapter.cast;
 
 import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
-import com.auth.core.user.domain.User;
+import com.auth.api.core.user.domain.User;
 
 public class UserCast {
 

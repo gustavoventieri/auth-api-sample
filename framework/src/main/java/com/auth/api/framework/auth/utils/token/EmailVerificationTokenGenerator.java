@@ -1,6 +1,6 @@
 package com.auth.api.framework.auth.utils.token;
 
-import com.auth.core.auth.application.port.in.emailVerification.GenerateEmailVerificationTokenUseCase;
+import com.auth.api.core.auth.application.port.in.emailVerification.GenerateEmailVerificationTokenUseCase;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;

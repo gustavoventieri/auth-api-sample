@@ -1,6 +1,6 @@
 package com.auth.api.framework.auth.utils.password;
 
-import com.auth.core.auth.application.port.in.password.HashPasswordUseCase;
+import com.auth.api.core.auth.application.port.in.password.HashPasswordUseCase;
 import org.springframework.stereotype.Component;
 
 @Component

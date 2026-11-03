@@ -1,6 +1,6 @@
     package com.auth.api.framework.user.adapter.port.out.persistence;
 
-    import com.auth.core.shared.enumerated.Roles;
+    import com.auth.api.core.shared.enumerated.Roles;
     import jakarta.persistence.*;
     import lombok.*;
 

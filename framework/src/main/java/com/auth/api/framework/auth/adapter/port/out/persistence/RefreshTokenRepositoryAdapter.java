@@ -1,7 +1,7 @@
 package com.auth.api.framework.auth.adapter.port.out.persistence;
 
-import com.auth.core.auth.application.port.out.RefreshTokenPersistencePort;
-import com.auth.core.auth.domain.RefreshToken;
+import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
+import com.auth.api.core.auth.domain.RefreshTokenDomain;
 import com.auth.api.framework.auth.adapter.cast.RefreshTokenCast;
 import com.auth.api.framework.auth.adapter.port.out.persistence.repository.SpringRefreshTokenDataRepository;
 import org.springframework.stereotype.Repository;
@@ -18,17 +18,17 @@ public class RefreshTokenRepositoryAdapter implements RefreshTokenPersistencePor
     }
 
     @Override
-    public void save(RefreshToken refreshToken) {
+    public void save(RefreshTokenDomain refreshToken) {
         springRefreshTokenDataRepository.save(RefreshTokenCast.toEntity(refreshToken));
     }
 
     @Override
-    public Optional<RefreshToken> findRefreshTokenByHashRefreshToken(String refreshToken) {
+    public Optional<RefreshTokenDomain> findRefreshTokenByHashRefreshToken(String refreshToken) {
         return springRefreshTokenDataRepository.findByTokenHash(refreshToken).map(RefreshTokenCast::toDomain);
     }
 
     @Override
-    public Optional<RefreshToken> findByPublicIdAndUserId(String publicId, String userId) {
+    public Optional<RefreshTokenDomain> findByPublicIdAndUserId(String publicId, String userId) {
         return springRefreshTokenDataRepository.findByPublicIdAndUser_Id(publicId, userId).map(RefreshTokenCast::toDomain);
     }
 }
