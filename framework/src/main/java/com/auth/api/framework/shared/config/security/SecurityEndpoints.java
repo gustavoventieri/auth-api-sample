@@ -23,7 +23,10 @@ public final class SecurityEndpoints {
             "/scalar/**",
 
             "/v3/api-docs",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+
+            "/actuator/health",
+            "/actuator/health/**"
     };
 
     public static final String[] CSRF_IGNORED_ENDPOINTS = {
@@ -56,6 +59,8 @@ public final class SecurityEndpoints {
                 || path.equals("/scalar")
                 || path.startsWith("/scalar/")
                 || path.equals("/v3/api-docs")
-                || path.startsWith("/v3/api-docs/");
+                || path.startsWith("/v3/api-docs/")
+                || path.equals("/actuator/health")
+                || path.startsWith("/actuator/health/");
     }
 }
