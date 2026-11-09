@@ -18,6 +18,7 @@ public class UserCast {
                 .mfaStatus(userDomain.mfaStatus() != null ? userDomain.mfaStatus() : MfaStatus.PENDING)
                 .createdAt(userDomain.createdAt())
                 .updatedAt(userDomain.updatedAt())
+                .version(userDomain.version())
                 .build();
     }
 
@@ -32,7 +33,8 @@ public class UserCast {
                 entity.isActive(),
                 entity.getMfaStatus() != null ? entity.getMfaStatus() : MfaStatus.PENDING,
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getVersion()
         );
     }
 }

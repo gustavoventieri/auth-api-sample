@@ -3,6 +3,7 @@ package com.auth.api.framework.auth.adapter.port.out.persistence.entity;
 import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
@@ -30,4 +31,10 @@ public class RecoveryCodeEntity {
 
     @Column(name = "used_at")
     private LocalDateTime usedAt;
+
+    // Lock otimista: UPDATE ... WHERE version = ?; requisições concorrentes sobre o mesmo
+    // registro falham com OptimisticLockingFailureException em vez de passarem as duas.
+    @Version
+    @ColumnDefault("0")
+    private Long version;
 }

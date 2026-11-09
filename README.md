@@ -92,7 +92,8 @@ Essa separação garante que as regras de autenticação (ex.: "refresh token ex
 
 - **Cadastro (Sign Up)** com hashing de senha (BCrypt) e envio de **código OTP** por e-mail para verificação de conta.
 - **Verificação de e-mail** com o código OTP, ativando a conta e liberando a configuração obrigatória do MFA.
-- **MFA obrigatório com TOTP** (Google Authenticator, Microsoft Authenticator, Authy...): login em duas etapas, QR code para vincular o app, códigos de recuperação de uso único, proteção contra replay e bloqueio após 5 códigos errados. Veja [docs/mfa-totp.md](docs/mfa-totp.md).
+- **MFA obrigatório com TOTP** (Google Authenticator, Microsoft Authenticator, Authy...): login em duas etapas, QR code para vincular o app, códigos de recuperação de uso único, proteção contra replay e bloqueio após 5 códigos errados. Veja [docs/mfa-totp.md](docs/mfa-totp.md) e o fluxo completo em [docs/authentication-flow.md](docs/authentication-flow.md).
+- **Reset de MFA pelo admin** para quem perdeu o celular e os códigos de recuperação, com auditoria, revogação de sessões e aviso por e-mail.
 - **Login (Sign In)** em duas etapas (senha + código TOTP), com geração de **Access Token (JWT)** de curta duração e **Refresh Token** de longa duração, entregues via cookies `httpOnly`/`secure`/`SameSite=Strict`.
 - **Refresh de sessão** com rotação e validação de refresh token contra hash armazenado no banco.
 - **Logout** com revogação do refresh token atual.
@@ -144,6 +145,7 @@ Todas as rotas usam o prefixo de contexto `/api/v1`.
 | `POST`   | `/auth/mfa/totp/setup/confirm`     | Confirma o 1º código, ativa o MFA e cria a sessão       | `mfaToken`   |
 | `POST`   | `/auth/mfa/totp/verify`            | Valida o código TOTP e cria a sessão                    | `mfaToken`   |
 | `POST`   | `/auth/mfa/recovery`               | Login com código de recuperação                         | `mfaToken`   |
+| `POST`   | `/admin/users/{userId}/mfa/reset`  | Reseta o MFA de quem perdeu o celular e os códigos      | JWT + ADMIN + CSRF |
 | `POST`   | `/sessions/refresh`                | Gera um novo access token a partir do refresh token     | Pública*     |
 | `POST`   | `/sessions/logout`                 | Revoga a sessão atual e limpa os cookies                | Pública*     |
 | `DELETE` | `/sessions/revoke/{sessionId}`     | Revoga uma sessão específica do usuário autenticado     | JWT          |
@@ -158,7 +160,10 @@ Todas as rotas usam o prefixo de contexto `/api/v1`.
 - **MFA TOTP obrigatório** (RFC 6238): segredo criptografado com **AES-256-GCM** (`MFA_ENCRYPTION_KEY`), desafio de login de uso único com expiração de 5 min e limite de tentativas, bloqueio de reutilização de código e códigos de recuperação armazenados só como hash. Detalhes em [docs/mfa-totp.md](docs/mfa-totp.md).
 - **BCrypt** com *strength* configurável via variável de ambiente para hashing de senha.
 - **Cookies `httpOnly` + `secure` + `SameSite=Strict`** para access e refresh tokens, mitigando XSS e CSRF na entrega dos tokens.
-- **Proteção CSRF** via `CookieCsrfTokenRepository`, com exceções apenas para os endpoints públicos de autenticação.
+- **Proteção CSRF** no modo SPA (`csrf.spa()`): cookie `XSRF-TOKEN` + header `X-XSRF-TOKEN`, com exceções apenas para os endpoints públicos de autenticação.
+- **Lock otimista** (`@Version`) em usuários, desafios MFA, segredos TOTP e códigos de recuperação: requisições concorrentes não reutilizam o mesmo desafio/código nem sobrescrevem alterações umas das outras (409).
+- **Refresh recusa usuário inativo/não verificado** e revoga a sessão, em vez de renová-la por até 30 dias.
+- Pendências de segurança conhecidas ficam em [`docs/to-do/`](docs/to-do/).
 - **Filtro de autenticação próprio** (`SecurityFilter extends OncePerRequestFilter`) que valida o JWT do cookie e popula o `SecurityContext`.
 - **RBAC declarativo customizado**: anotação `@RequiredRole(Roles.ADMIN)` interpretada por um `AuthorizationManager` registrado como interceptor de método (`AuthorizationManagerBeforeMethodInterceptor`).
 - **Tratamento centralizado de erros de autenticação/autorização**, sem vazar detalhes internos nas respostas.

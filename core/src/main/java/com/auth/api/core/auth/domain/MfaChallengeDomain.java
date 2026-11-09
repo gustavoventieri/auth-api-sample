@@ -20,7 +20,9 @@ public record MfaChallengeDomain(
         int failedAttempts,
         LocalDateTime expiresAt,
         LocalDateTime createdAt,
-        LocalDateTime usedAt
+        LocalDateTime usedAt,
+        /** Versão para lock otimista (null = ainda não persistido). */
+        Long version
 ) implements ExpirableToken {
 
     public static final Duration TTL = Duration.ofMinutes(5);

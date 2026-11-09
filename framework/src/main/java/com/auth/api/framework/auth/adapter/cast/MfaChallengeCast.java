@@ -6,15 +6,16 @@ import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
 
 public class MfaChallengeCast {
 
-    public static MfaChallengeEntity toEntity(MfaChallengeDomain challenge) {
+    public static MfaChallengeEntity toEntity(MfaChallengeDomain challenge, UserEntity user) {
         return MfaChallengeEntity.builder()
                 .id(challenge.id())
-                .user(UserEntity.builder().id(challenge.userId()).build())
+                .user(user)
                 .tokenHash(challenge.tokenHash())
                 .purpose(challenge.purpose())
                 .failedAttempts(challenge.failedAttempts())
                 .expiresAt(challenge.expiresAt())
                 .createdAt(challenge.createdAt())
+                .version(challenge.version())
                 .usedAt(challenge.usedAt())
                 .build();
     }
@@ -28,7 +29,8 @@ public class MfaChallengeCast {
                 entity.getFailedAttempts(),
                 entity.getExpiresAt(),
                 entity.getCreatedAt(),
-                entity.getUsedAt()
+                entity.getUsedAt(),
+                entity.getVersion()
         );
     }
 }

@@ -6,14 +6,15 @@ import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
 
 public class UserTotpCast {
 
-    public static UserTotpEntity toEntity(UserTotpDomain totp) {
+    public static UserTotpEntity toEntity(UserTotpDomain totp, UserEntity user) {
         return UserTotpEntity.builder()
                 .id(totp.id())
-                .user(UserEntity.builder().id(totp.userId()).build())
+                .user(user)
                 .encryptedSecret(totp.encryptedSecret())
                 .lastUsedTimeStep(totp.lastUsedTimeStep())
                 .confirmedAt(totp.confirmedAt())
                 .createdAt(totp.createdAt())
+                .version(totp.version())
                 .updatedAt(totp.updatedAt())
                 .build();
     }
@@ -26,7 +27,8 @@ public class UserTotpCast {
                 entity.getLastUsedTimeStep(),
                 entity.getConfirmedAt(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getVersion()
         );
     }
 }

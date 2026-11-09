@@ -1,5 +1,6 @@
 package com.auth.api.framework.auth.config.bean;
 
+import com.auth.api.core.auth.application.port.in.mfa.AdminResetMfaUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.ConfirmTotpSetupUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.GenerateMfaChallengeTokenUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.HashMfaChallengeTokenUseCase;
@@ -11,9 +12,11 @@ import com.auth.api.core.auth.application.port.in.mfa.VerifyTotpUseCase;
 import com.auth.api.core.auth.application.port.in.sign.IssueAuthTokensUseCase;
 import com.auth.api.core.auth.application.port.out.MfaChallengePersistencePort;
 import com.auth.api.core.auth.application.port.out.RecoveryCodePersistencePort;
+import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
 import com.auth.api.core.auth.application.port.out.SecretEncryptionPort;
 import com.auth.api.core.auth.application.port.out.TotpPort;
 import com.auth.api.core.auth.application.port.out.UserTotpPersistencePort;
+import com.auth.api.core.auth.application.service.mfa.AdminResetMfaService;
 import com.auth.api.core.auth.application.service.mfa.ConfirmTotpSetupService;
 import com.auth.api.core.auth.application.service.mfa.IssueMfaChallengeService;
 import com.auth.api.core.auth.application.service.mfa.MfaChallengeValidator;
@@ -156,6 +159,29 @@ public class MfaBeanConfig {
                 issueAuthTokensUseCase,
                 transactionManager,
                 signInNotifier
+        );
+    }
+
+    @Bean
+    public AdminResetMfaUseCase adminResetMfaUseCase(
+            UserAuthenticationPersistencePort userAuthenticationPersistencePort,
+            UserTotpPersistencePort userTotpPersistencePort,
+            RecoveryCodePersistencePort recoveryCodePersistencePort,
+            MfaChallengePersistencePort mfaChallengePersistencePort,
+            RefreshTokenPersistencePort refreshTokenPersistencePort,
+            TransactionManager transactionManager,
+            EmailPort emailPort,
+            EmailTemplateUseCase emailTemplateUseCase
+    ) {
+        return new AdminResetMfaService(
+                userAuthenticationPersistencePort,
+                userTotpPersistencePort,
+                recoveryCodePersistencePort,
+                mfaChallengePersistencePort,
+                refreshTokenPersistencePort,
+                transactionManager,
+                emailPort,
+                emailTemplateUseCase
         );
     }
 }

@@ -50,4 +50,11 @@
 
         @Column(name = "updated_at", nullable = false)
         private LocalDateTime updatedAt;
+
+        // Lock otimista: o save grava a linha inteira; sem isso, duas operações concorrentes
+        // (ex.: reset de senha + confirmação do MFA) podiam sobrescrever uma à outra.
+        // DEFAULT 0 garante que usuários já existentes recebam versão ao adicionar a coluna.
+        @Version
+        @ColumnDefault("0")
+        private Long version;
     }

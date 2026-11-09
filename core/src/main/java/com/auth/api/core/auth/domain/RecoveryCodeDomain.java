@@ -15,7 +15,9 @@ public record RecoveryCodeDomain(
         String userId,
         String codeHash,
         LocalDateTime createdAt,
-        LocalDateTime usedAt
+        LocalDateTime usedAt,
+        /** Versão para lock otimista (null = ainda não persistido). */
+        Long version
 ) {
 
     public static RecoveryCodeDomain create(String userId, String codeHash) {

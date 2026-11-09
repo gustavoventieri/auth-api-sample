@@ -6,10 +6,10 @@ import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
 
 public class ResetPasswordVerificationTokenCast {
 
-    public static ResetPasswordVerificationTokenEntity toEntity(ResetPasswordVerificationTokenDomain token) {
+    public static ResetPasswordVerificationTokenEntity toEntity(ResetPasswordVerificationTokenDomain token, UserEntity user) {
         return ResetPasswordVerificationTokenEntity.builder()
                 .id(token.id())
-                .user(UserEntity.builder().id(token.userId()).build())
+                .user(user)
                 .otpCode(token.otpCode())
                 .expiresAt(token.expiresAt())
                 .createdAt(token.createdAt())

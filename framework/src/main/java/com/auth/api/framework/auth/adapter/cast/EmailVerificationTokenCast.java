@@ -8,14 +8,12 @@ import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
 public class EmailVerificationTokenCast {
 
     public static EmailVerificationTokenEntity toEntity(
-            EmailVerificationTokenDomain token
+            EmailVerificationTokenDomain token, UserEntity user
     ) {
         return EmailVerificationTokenEntity.builder()
                 .id(token.id())
                 .user(
-                        UserEntity.builder()
-                                .id(token.userId())
-                                .build()
+                        user
                 )
                 .otpCode(token.otpCode())
                 .expiresAt(token.expiresAt())

@@ -20,7 +20,9 @@ public record UserDomain(
         boolean isActive,
         MfaStatus mfaStatus,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        /** Versão para lock otimista (null = ainda não persistido). */
+        Long version
 ) {
 
     public static UserDomain create(
@@ -54,6 +56,11 @@ public record UserDomain(
 
     public UserDomain enableMfa() {
         return touch().mfaStatus(MfaStatus.ENABLED).build();
+    }
+
+    /** Volta o usuário para PENDING: no próximo login ele terá que vincular um novo autenticador. */
+    public UserDomain resetMfa() {
+        return touch().mfaStatus(MfaStatus.PENDING).build();
     }
 
     public UserDomain verify() {

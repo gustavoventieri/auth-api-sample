@@ -7,6 +7,7 @@ import com.auth.api.core.shared.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -56,6 +57,25 @@ public class GlobalExceptionHandler
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
+    /**
+     * Lock otimista: duas requisições concorrentes alteraram o mesmo registro
+     * (ex.: o mesmo mfaToken/código enviado duas vezes ao mesmo tempo). Só uma vence.
+     */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLock(
+            OptimisticLockingFailureException ex,
+            HttpServletRequest request
+    ) {
+
+        log.warn("Optimistic lock conflict on {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                "The request conflicted with a concurrent request. Please try again",
                 request.getRequestURI()
         );
     }

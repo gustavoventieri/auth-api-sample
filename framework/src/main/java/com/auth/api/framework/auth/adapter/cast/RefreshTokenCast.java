@@ -6,14 +6,12 @@ import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
 
 public class RefreshTokenCast {
 
-    public static RefreshTokenEntity toEntity(RefreshTokenDomain token) {
+    public static RefreshTokenEntity toEntity(RefreshTokenDomain token, UserEntity user) {
 
         return RefreshTokenEntity.builder()
                 .id(token.id())
                 .user(
-                        UserEntity.builder()
-                                .id(token.userId())
-                                .build()
+                        user
                 )
                 .tokenHash(token.tokenHash())
                 .ip(token.ip())

@@ -6,12 +6,13 @@ import com.auth.api.framework.user.adapter.port.out.persistence.UserEntity;
 
 public class RecoveryCodeCast {
 
-    public static RecoveryCodeEntity toEntity(RecoveryCodeDomain recoveryCode) {
+    public static RecoveryCodeEntity toEntity(RecoveryCodeDomain recoveryCode, UserEntity user) {
         return RecoveryCodeEntity.builder()
                 .id(recoveryCode.id())
-                .user(UserEntity.builder().id(recoveryCode.userId()).build())
+                .user(user)
                 .codeHash(recoveryCode.codeHash())
                 .createdAt(recoveryCode.createdAt())
+                .version(recoveryCode.version())
                 .usedAt(recoveryCode.usedAt())
                 .build();
     }
@@ -22,7 +23,8 @@ public class RecoveryCodeCast {
                 entity.getUser().getId(),
                 entity.getCodeHash(),
                 entity.getCreatedAt(),
-                entity.getUsedAt()
+                entity.getUsedAt(),
+                entity.getVersion()
         );
     }
 }

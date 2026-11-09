@@ -49,6 +49,14 @@ public class RenewRefreshTokenService implements RenewRefreshTokenUseCase {
         UserDomain userDomain = userAuthenticationPersistencePort.findById(storedToken.userId())
                 .orElseThrow(() -> new NotFoundException("User Not Found"));
 
+        // O refresh token pode durar 30 dias: sem esta checagem, um usuário desativado
+        // continuaria renovando o access token até ele expirar. A sessão é revogada para que
+        // reativar o usuário não "ressuscite" sessões antigas.
+        if (!userDomain.isActiveAndVerified()) {
+            refreshTokenRepositoryPort.save(storedToken.revoke());
+            throw new BusinessException("User not Active");
+        }
+
         String accessToken = generateAccessTokenUseCase.execute(userDomain.id(), userDomain.role());
 
         return new AuthResponse(accessToken, refreshToken);

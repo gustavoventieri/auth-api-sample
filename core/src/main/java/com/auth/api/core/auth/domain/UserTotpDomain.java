@@ -18,7 +18,9 @@ public record UserTotpDomain(
         Long lastUsedTimeStep,
         LocalDateTime confirmedAt,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        /** Versão para lock otimista (null = ainda não persistido). */
+        Long version
 ) {
 
     public static UserTotpDomain create(String userId, String encryptedSecret) {

@@ -7,11 +7,15 @@ Todo login exige um segundo fator: um código de 6 dígitos gerado por um **app 
 O padrão usado é o **TOTP (RFC 6238)**, implementado com a biblioteca
 [`dev.samstevens.totp`](https://github.com/samdjstevens/java-totp) `1.7.1`.
 
+> O fluxo de autenticação completo (cadastro, login, sessão, reset de senha e admin), com
+> fluxogramas, está em **[authentication-flow.md](authentication-flow.md)**.
+
 ## Sumário
 
 - [Visão geral](#visão-geral)
 - [Fluxos](#fluxos)
 - [Endpoints](#endpoints)
+- [Reset de MFA pelo admin](#reset-de-mfa-pelo-admin)
 - [Guia de integração do frontend](#guia-de-integração-do-frontend)
 - [Configuração](#configuração)
 - [Modelo de dados](#modelo-de-dados)
@@ -203,6 +207,55 @@ pontas são ignorados.
 | `MFA is already enabled`                                    | `/setup` chamado por quem já tem MFA                          | Vai para o `/totp/verify`         |
 | `code: MFA code must contain 6 digits`                      | Falha de validação do código                                  | Valida o campo no front           |
 
+Além disso, **409** `The request conflicted with a concurrent request. Please try again`
+aparece quando duas requisições usam o mesmo desafio ou código ao mesmo tempo (lock otimista;
+veja abaixo). O front pode tratar como "tente novamente" ou recarregar o estado.
+
+---
+
+## Reset de MFA pelo admin
+
+Para quem perdeu o celular **e** os códigos de recuperação.
+
+```http
+POST /api/v1/admin/users/{userId}/mfa/reset
+Cookie: access_token=<sessão de ADMIN>; XSRF-TOKEN=...
+X-XSRF-TOKEN: <valor do cookie XSRF-TOKEN>
+
+{ "reason": "Ticket #4821 - identidade confirmada por videochamada" }
+```
+
+**200**:
+
+```json
+{
+  "message": "MFA reset. The user must set up a new authenticator on the next sign in",
+  "data": { "userId": "1a4a...", "mfaStatus": "PENDING", "revokedSessions": 2 }
+}
+```
+
+Em uma única transação, o reset:
+
+1. volta o `mfa_status` para `PENDING`;
+2. apaga o segredo TOTP, os códigos de recuperação e os desafios pendentes;
+3. revoga **todas** as sessões (refresh tokens) do usuário.
+
+Depois disso, grava o log de auditoria `AUDIT mfa_reset admin=… user=… revokedSessions=… reason="…"`
+e envia ao usuário o e-mail "MFA redefinido", com o alerta "não foi você?".
+
+| Resposta | Quando                                                          |
+|----------|-----------------------------------------------------------------|
+| 403      | Sem header CSRF válido, ou usuário sem `ROLE_ADMIN`             |
+| 401      | Sem sessão (com CSRF válido)                                    |
+| 400      | `reason` fora de 10 a 500 caracteres, ou admin resetando o próprio MFA |
+| 404      | Usuário não encontrado                                          |
+
+> ⚠️ **A API não confirma a identidade do solicitante.** Essa verificação (documento,
+> videochamada, segundo aprovador) é um procedimento do suporte e deve vir **antes** do
+> reset. Registre o ticket no `reason`. O usuário continua precisando da senha; o reset só
+> troca o segundo fator. Os access tokens já emitidos valem até expirar (≤ 15 min); veja
+> [to-do/access-token-revocation.md](to-do/access-token-revocation.md).
+
 ---
 
 ## Guia de integração do frontend
@@ -323,6 +376,8 @@ usuários.
 | Token de setup usado para logar (e vice-versa)| `purpose` validado em cada endpoint                                                            |
 | Cache de QR code ou códigos de recuperação    | `Cache-Control: no-store` no `/setup` e no `/setup/confirm`                                    |
 | Ativação de MFA sem o usuário saber           | E-mail "MFA ativado" com alerta de "Não foi você?"                                             |
+| Requisições concorrentes com o mesmo desafio/código | **Lock otimista** (`@Version`) em usuário, desafio, segredo e recovery codes: só uma vence, as outras recebem 409 |
+| Perda do autenticador e dos recovery codes    | Reset pelo admin, com auditoria, e-mail ao usuário e revogação de todas as sessões; admin não reseta o próprio MFA |
 
 **Compatibilidade com apps:** os parâmetros são fixos em **SHA1 / 6 dígitos / 30 s**.
 Versões antigas do Google Authenticator ignoram outros valores, e qualquer mudança aqui
@@ -362,7 +417,8 @@ core/src/main/java/com/auth/api/core/
             │   ├── SetupTotpService.java
             │   ├── ConfirmTotpSetupService.java
             │   ├── VerifyTotpService.java
-            │   └── VerifyRecoveryCodeService.java
+            │   ├── VerifyRecoveryCodeService.java
+            │   └── AdminResetMfaService.java         # reset pelo admin + auditoria
             ├── emailVerification/
             │   └── VerifyEmailVerificationTokenService.java  # e-mail ⇒ desafio de SETUP
             ├── refreshToken/                         # Renew / Revoke
@@ -372,6 +428,7 @@ framework/src/main/java/com/auth/api/framework/auth/
 ├── adapter/port/in/web/
 │   ├── AuthController.java                       # sign-in/verify-email devolvem o desafio
 │   ├── MfaController.java                        # /auth/mfa/**
+│   ├── AdminMfaController.java                   # /admin/users/{id}/mfa/reset (ADMIN)
 │   └── support/                                  # AuthCookieWriter, ClientRequestInfo
 ├── adapter/port/out/persistence/                 # MfaChallenge/UserTotp/RecoveryCode adapters + entities
 ├── utils/mfa/
@@ -381,7 +438,7 @@ framework/src/main/java/com/auth/api/framework/auth/
 ├── utils/token/                                  # MfaChallengeTokenGenerator, MfaHasher
 └── config/bean/MfaBeanConfig.java
 
-framework/src/main/resources/templates/mfa-enabled-email.html
+framework/src/main/resources/templates/mfa-enabled-email.html, mfa-reset-email.html
 ```
 
 **Por que não usar o `DefaultCodeVerifier` da lib?** Ele só devolve `true`/`false`. Para
@@ -406,6 +463,18 @@ isolado e SMTP falso), com **25/25 verificações**: cadastro, setup, confirmaç
 replay, tolerância de relógio, códigos de recuperação, bloqueio após 5 erros, troca de
 `purpose`, ausência de cookies antes do MFA e envio dos e-mails.
 
+Também foram verificados:
+
+- **Lock otimista (6/6):** 12 requisições simultâneas com o mesmo `mfaToken` e código
+  resultaram em exatamente 1 × `200` e 11 × `409`, com uma única sessão gravada. O mesmo
+  vale para o `/recovery`, e o código de recuperação foi marcado como usado uma única vez.
+- **Reset de admin (16/16):** 401 sem sessão, 403 para não-admin e sem CSRF, 400 para
+  `reason` curto e para auto-reset, 404 para usuário inexistente. No reset bem-sucedido o
+  status volta para `PENDING`, o segredo, os códigos e os desafios são apagados, todas as
+  sessões são revogadas (o refresh antigo para de funcionar) e o e-mail é enviado. Depois
+  disso, o próximo login pede `MFA_SETUP_REQUIRED`, o usuário consegue configurar um novo
+  autenticador e os códigos e o autenticador antigos deixam de funcionar.
+
 > O `FrameworkApplicationTests` sobe o contexto inteiro e conecta no banco do
 > `env.properties`. Ele precisa da `MFA_ENCRYPTION_KEY` configurada.
 
@@ -413,17 +482,13 @@ replay, tolerância de relógio, códigos de recuperação, bloqueio após 5 err
 
 ## Limitações e próximos passos
 
-- **Perda do celular e dos códigos de recuperação:** hoje não há fluxo de suporte para
-  resetar o MFA. Sugestão: um endpoint `ADMIN` que volta o usuário para `PENDING`, apaga o
-  segredo e os códigos e revoga as sessões, com e-mail de aviso.
 - **Regenerar códigos de recuperação:** um endpoint autenticado (JWT + código TOTP) para
   gerar um novo lote. Também vale avisar quando restarem poucos códigos.
 - **Rate limit:** o limite de 5 erros é **por desafio**. Um atacante com a senha pode fazer
   novos logins para ganhar novas tentativas. Aplique o rate limiter (Redis) por usuário e
   por IP em `/auth/sign-in` e `/auth/mfa/**`.
-- **Requisições concorrentes:** duas chamadas simultâneas com o mesmo `mfaToken` podem
-  passar antes de a primeira gravar `used_at`. Para fechar isso: `@Version` (lock otimista)
-  em `MfaChallengeEntity`/`UserTotpEntity`, ou `UPDATE ... WHERE used_at IS NULL` atômico.
+- **Access token após reset ou logout:** o JWT continua válido até expirar (≤ 15 min).
+  Análise e opções em [to-do/access-token-revocation.md](to-do/access-token-revocation.md).
 - **Rotação da `MFA_ENCRYPTION_KEY`:** não há suporte a várias chaves. Para rotacionar, seria
   preciso um prefixo de versão no `encrypted_secret` e um job de recriptografia.
 - **Duplicação de cookies:** o `SessionController` ainda tem a própria lógica de cookies;
