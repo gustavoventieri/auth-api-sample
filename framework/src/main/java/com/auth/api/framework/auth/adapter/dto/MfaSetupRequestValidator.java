@@ -14,7 +14,9 @@ public record MfaSetupRequestValidator(
         @Size(max = 128, message = "MFA token is invalid")
         String mfaToken,
 
-        @Pattern(regexp = "\\d{6}", message = "Email code must contain 6 digits")
+        // vazio é aceito (clientes como o Scalar enviam "" em vez de omitir o campo);
+        // a obrigatoriedade real é decidida no SetupTotpService.
+        @Pattern(regexp = "^$|\\d{6}", message = "Email code must contain 6 digits")
         String emailCode
 
 ) {

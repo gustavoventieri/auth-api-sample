@@ -15,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -125,10 +126,16 @@ public class GlobalExceptionHandler
             AccessDeniedException ex
     ) throws IOException {
 
+        // CsrfException também é AccessDeniedException: separa a mensagem para não
+        // confundir token CSRF ausente/inválido com falta de permissão (role).
+        String message = ex instanceof CsrfException
+                ? "Invalid or missing CSRF token. Send the XSRF-TOKEN cookie value in the X-XSRF-TOKEN header"
+                : "You do not have permission to access this resource";
+
         buildSecurityReponse(
                 response,
                 HttpStatus.FORBIDDEN,
-                "You do not have permission to access this resource",
+                message,
                 request.getRequestURI()
         );
     }
