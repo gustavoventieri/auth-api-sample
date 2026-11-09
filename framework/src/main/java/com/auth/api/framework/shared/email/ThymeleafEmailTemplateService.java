@@ -57,6 +57,59 @@ public class ThymeleafEmailTemplateService
     }
 
     @Override
+    public String buildMfaEnabledEmail(String name) {
+
+        Context context = new Context();
+
+        context.setVariable(
+                "name",
+                name
+        );
+
+        return templateEngine.process(
+                "mfa-enabled-email",
+                context
+        );
+    }
+
+    @Override
+    public String buildMfaResetEmail(String name) {
+
+        Context context = new Context();
+
+        context.setVariable(
+                "name",
+                name
+        );
+
+        return templateEngine.process(
+                "mfa-reset-email",
+                context
+        );
+    }
+
+    @Override
+    public String buildMfaSetupCodeEmail(String name, String otpCode) {
+
+        Context context = new Context();
+
+        context.setVariable(
+                "name",
+                name
+        );
+
+        context.setVariable(
+                "otpCode",
+                otpCode
+        );
+
+        return templateEngine.process(
+                "mfa-setup-code-email",
+                context
+        );
+    }
+
+    @Override
     public String buildAccountCreatedEmail(
             String name,
             String otpCode

@@ -1,6 +1,7 @@
 package com.auth.api.framework.auth.utils.token;
 
 import com.auth.api.core.auth.application.port.in.emailVerification.HashEmailVerificationTokenUseCase;
+import com.auth.api.core.auth.application.port.in.mfa.HashMfaEmailCodeUseCase;
 import com.auth.api.core.auth.application.port.in.password.reset.HashResetPasswordVerificationTokenUseCase;
 import com.auth.api.framework.auth.utils.hash.Hasher256Service;
 import org.springframework.stereotype.Component;
@@ -8,7 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class OtpCodeHasher implements
         HashEmailVerificationTokenUseCase,
-        HashResetPasswordVerificationTokenUseCase {
+        HashResetPasswordVerificationTokenUseCase,
+        HashMfaEmailCodeUseCase {
 
     private final Hasher256Service sha256Hasher;
 

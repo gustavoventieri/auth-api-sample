@@ -6,7 +6,7 @@ import com.auth.api.core.auth.application.port.in.emailVerification.HashEmailVer
 import com.auth.api.core.auth.application.port.in.password.HashPasswordUseCase;
 import com.auth.api.core.auth.application.port.in.sign.SignUpUseCase;
 import com.auth.api.core.auth.application.port.out.EmailVerificationTokenPort;
-import com.auth.api.core.auth.application.service.SignUpService;
+import com.auth.api.core.auth.application.service.sign.SignUpService;
 import com.auth.api.core.shared.email.EmailPort;
 import com.auth.api.core.shared.email.EmailTemplateUseCase;
 import com.auth.api.core.shared.transaction.TransactionManager;

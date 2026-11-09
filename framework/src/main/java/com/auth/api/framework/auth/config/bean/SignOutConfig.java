@@ -3,7 +3,7 @@ package com.auth.api.framework.auth.config.bean;
 import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.sign.SignOutUseCase;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
-import com.auth.api.core.auth.application.service.SignOutService;
+import com.auth.api.core.auth.application.service.sign.SignOutService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

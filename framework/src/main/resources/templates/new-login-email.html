@@ -1,148 +1,136 @@
-
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="~{fragments/email-layout :: head-meta}"></th:block>
     <title>Novo acesso detectado</title>
+    <style th:replace="~{fragments/email-layout :: styles}"></style>
 </head>
 
-<body style="margin:0; padding:0; background:#f4f4f5; font-family:Arial, Helvetica, sans-serif; color:#18181b;">
+<body class="bg-page" style="margin:0; padding:0; background-color:#f4f4f5;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f5; padding:40px 16px;">
+<!-- Preheader -->
+<div style="display:none; max-height:0; max-width:0; overflow:hidden; opacity:0; mso-hide:all; font-size:1px; line-height:1px; color:#f4f4f5;">
+    Detectamos um novo acesso à sua conta. Confira os detalhes.
+    &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
+</div>
+
+<table role="presentation" class="bg-page wrapper" width="100%" cellpadding="0" cellspacing="0" border="0"
+       bgcolor="#f4f4f5" style="background-color:#f4f4f5; padding:40px 16px;">
     <tr>
         <td align="center">
+            <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+            <table role="presentation" class="bg-card" width="100%" cellpadding="0" cellspacing="0" border="0"
+                   bgcolor="#ffffff"
+                   style="max-width:600px; background-color:#ffffff; border-radius:16px; overflow:hidden;
+                          box-shadow:0 1px 3px rgba(0,0,0,0.06);">
 
-            <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                   style="max-width:600px; background:#ffffff; border-radius:16px; overflow:hidden;">
+                <tr th:replace="~{fragments/email-layout :: header('Segurança da conta')}"></tr>
 
-                <!-- Header -->
                 <tr>
-                    <td style="background:#18181b; padding:32px 40px; text-align:center;">
-                        <div style="font-size:24px; font-weight:700; color:#ffffff;">
-                            Financial API
-                        </div>
+                    <td class="px content" style="padding:40px; font-family:Arial, Helvetica, sans-serif;">
 
-                        <div style="margin-top:6px; font-size:13px; color:#a1a1aa;">
-                            Segurança da sua conta
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Content -->
-                <tr>
-                    <td style="padding:40px;">
-
-                        <div style="display:inline-block; padding:7px 12px; border-radius:999px;
-                                    background:#f4f4f5; color:#52525b; font-size:12px; font-weight:600;">
+                        <span style="display:inline-block; padding:6px 12px; border-radius:999px;
+                                     background-color:#fffbeb; color:#b45309; font-size:11px; font-weight:700;
+                                     letter-spacing:.8px;">
                             NOVO ACESSO
-                        </div>
+                        </span>
 
-                        <h1 style="margin:20px 0 12px; font-size:26px; line-height:1.25; color:#18181b;">
-                            Novo acesso detectado
+                        <h1 class="h1 text-strong"
+                            style="margin:20px 0 12px; font-size:26px; line-height:1.3; font-weight:700; color:#18181b;">
+                            Novo acesso à sua conta
                         </h1>
 
-                        <p style="margin:0 0 24px; font-size:15px; line-height:1.7; color:#52525b;">
-                            Olá, <strong th:text="${name}">Nome</strong>!
+                        <p class="text-body" style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#52525b;">
+                            Olá, <strong class="text-strong" th:text="${name}" style="color:#18181b;">Nome</strong>.
                         </p>
 
-                        <p style="margin:0 0 28px; font-size:15px; line-height:1.7; color:#52525b;">
+                        <p class="text-body" style="margin:0 0 28px; font-size:15px; line-height:1.7; color:#52525b;">
                             Detectamos um novo acesso à sua conta na Financial API.
                             Confira os detalhes abaixo.
                         </p>
 
-                        <!-- Access Details -->
-                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                               style="border:1px solid #e4e4e7; border-radius:12px; overflow:hidden;">
-
+                        <!-- Detalhes do acesso -->
+                        <table role="presentation" class="border" width="100%" cellpadding="0" cellspacing="0" border="0"
+                               style="border:1px solid #e4e4e7; border-radius:12px; border-collapse:separate;">
                             <tr>
-                                <td style="padding:18px 20px; border-bottom:1px solid #e4e4e7;">
-
-                                    <div style="font-size:11px; font-weight:600;
-                                                text-transform:uppercase; letter-spacing:.8px;
-                                                color:#a1a1aa;">
-                                        Dispositivo
-                                    </div>
-
-                                    <div th:text="${device}" style="margin-top:6px; font-size:14px; color:#27272a;"> Dispositivo </div>
-
+                                <td class="detail-label text-muted border"
+                                    style="padding:16px 20px; border-bottom:1px solid #e4e4e7; font-size:12px;
+                                           font-weight:700; text-transform:uppercase; letter-spacing:.8px;
+                                           color:#71717a; width:40%;">
+                                    Dispositivo
+                                </td>
+                                <td class="detail-value text-strong border" th:text="${device}" align="right"
+                                    style="padding:16px 20px; border-bottom:1px solid #e4e4e7; font-size:14px;
+                                           color:#18181b; text-align:right; word-break:break-word;">
+                                    Dispositivo
                                 </td>
                             </tr>
-
                             <tr>
-                                <td style="padding:18px 20px; border-bottom:1px solid #e4e4e7;">
-
-
-
-                                    <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:#a1a1aa;"> Endereço IP </div> <div th:text="${ip}" style="margin-top:6px; font-size:14px; color:#27272a;"> 0.0.0.0 </div>
-
+                                <td class="detail-label text-muted border"
+                                    style="padding:16px 20px; border-bottom:1px solid #e4e4e7; font-size:12px;
+                                           font-weight:700; text-transform:uppercase; letter-spacing:.8px;
+                                           color:#71717a; width:40%;">
+                                    Endereço IP
+                                </td>
+                                <td class="detail-value text-strong border" th:text="${ip}" align="right"
+                                    style="padding:16px 20px; border-bottom:1px solid #e4e4e7; font-size:14px;
+                                           font-family:'Courier New', Courier, monospace; color:#18181b;
+                                           text-align:right; word-break:break-all;">
+                                    0.0.0.0
                                 </td>
                             </tr>
-
                             <tr>
-                                <td style="padding:18px 20px;">
-
-                                    <div style="font-size:11px; font-weight:600;
-                                                text-transform:uppercase; letter-spacing:.8px;
-                                                color:#a1a1aa;">
-                                        Data e hora
-                                    </div>
-
-                                    <div th:text="${dateTime}" style="margin-top:6px; font-size:14px; color:#27272a;"> Data e hora </div>
-
+                                <td class="detail-label text-muted"
+                                    style="padding:16px 20px; font-size:12px; font-weight:700;
+                                           text-transform:uppercase; letter-spacing:.8px; color:#71717a; width:40%;">
+                                    Data e hora
+                                </td>
+                                <td class="detail-value text-strong" th:text="${dateTime}" align="right"
+                                    style="padding:16px 20px; font-size:14px; color:#18181b; text-align:right;">
+                                    01/01/2026 às 00:00
                                 </td>
                             </tr>
-
                         </table>
 
-                        <!-- Security Message -->
-                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                               style="margin-top:28px; background:#fafafa; border-radius:12px;">
-
+                        <!-- Foi você? -->
+                        <table role="presentation" class="bg-soft" width="100%" cellpadding="0" cellspacing="0" border="0"
+                               bgcolor="#fafafa"
+                               style="margin-top:24px; background-color:#fafafa; border-radius:12px;">
                             <tr>
-                                <td style="padding:20px;">
-
-                                    <div style="font-size:14px; font-weight:600; color:#18181b;">
+                                <td style="padding:20px 24px;">
+                                    <div class="text-strong" style="font-size:14px; font-weight:700; color:#18181b;">
                                         Foi você?
                                     </div>
-
-                                    <div style="margin-top:8px; font-size:13px; line-height:1.6; color:#71717a;">
-                                        Se foi você quem realizou este acesso, nenhuma
-                                        ação é necessária.
+                                    <div class="text-muted" style="margin-top:6px; font-size:13px; line-height:1.6; color:#71717a;">
+                                        Se foi você quem realizou este acesso, nenhuma ação é necessária.
                                     </div>
-
                                 </td>
                             </tr>
-
                         </table>
 
-                        <p style="margin:24px 0 0; font-size:13px; line-height:1.6; color:#52525b;">
-                            <strong>Não reconhece este acesso?</strong>
-                        </p>
-
-                        <p style="margin:8px 0 0; font-size:13px; line-height:1.6; color:#71717a;">
-                            Altere sua senha imediatamente e verifique as sessões ativas
-                            da sua conta.
-                        </p>
+                        <!-- Não reconhece? -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                               bgcolor="#fef2f2"
+                               style="margin-top:12px; background-color:#fef2f2; border:1px solid #fecaca; border-radius:12px;">
+                            <tr>
+                                <td style="padding:20px 24px;">
+                                    <div style="font-size:14px; font-weight:700; color:#991b1b;">
+                                        Não reconhece este acesso?
+                                    </div>
+                                    <div style="margin-top:6px; font-size:13px; line-height:1.6; color:#7f1d1d;">
+                                        Altere sua senha imediatamente e verifique as sessões ativas da sua conta.
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
 
                     </td>
                 </tr>
 
-                <!-- Footer -->
-                <tr>
-                    <td style="border-top:1px solid #e4e4e7; padding:24px 40px; text-align:center;">
-                        <div style="font-size:12px; color:#a1a1aa;">
-                            © 2026 Financial API
-                        </div>
-
-                        <div style="margin-top:6px; font-size:11px; color:#d4d4d8;">
-                            Este é um e-mail automático. Por favor, não responda.
-                        </div>
-                    </td>
-                </tr>
+                <tr th:replace="~{fragments/email-layout :: footer}"></tr>
 
             </table>
-
+            <!--[if mso]></td></tr></table><![endif]-->
         </td>
     </tr>
 </table>

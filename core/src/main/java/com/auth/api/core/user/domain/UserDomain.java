@@ -1,5 +1,6 @@
 package com.auth.api.core.user.domain;
 
+import com.auth.api.core.shared.enumerated.MfaStatus;
 import com.auth.api.core.shared.enumerated.Roles;
 import lombok.Builder;
 
@@ -17,8 +18,11 @@ public record UserDomain(
         Roles role,
         boolean isVerified,
         boolean isActive,
+        MfaStatus mfaStatus,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        /** Versão para lock otimista (null = ainda não persistido). */
+        Long version
 ) {
 
     public static UserDomain create(
@@ -36,6 +40,7 @@ public record UserDomain(
                 .role(Roles.USER)
                 .isVerified(false)
                 .isActive(true)
+                .mfaStatus(MfaStatus.PENDING)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -43,6 +48,19 @@ public record UserDomain(
 
     public boolean isActiveAndVerified() {
         return isActive && isVerified;
+    }
+
+    public boolean isMfaEnabled() {
+        return mfaStatus == MfaStatus.ENABLED;
+    }
+
+    public UserDomain enableMfa() {
+        return touch().mfaStatus(MfaStatus.ENABLED).build();
+    }
+
+    /** Volta o usuário para PENDING: no próximo login ele terá que vincular um novo autenticador. */
+    public UserDomain resetMfa() {
+        return touch().mfaStatus(MfaStatus.PENDING).build();
     }
 
     public UserDomain verify() {

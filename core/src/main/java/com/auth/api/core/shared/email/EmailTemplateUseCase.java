@@ -4,6 +4,9 @@ public interface EmailTemplateUseCase {
     String buildVerificationEmail(String otpCode);
     String buildResetPasswordEmail(String otpCode);
     String buildPasswordChangedEmail(String name);
+    String buildMfaEnabledEmail(String name);
+    String buildMfaResetEmail(String name);
+    String buildMfaSetupCodeEmail(String name, String otpCode);
     String buildAccountCreatedEmail(
             String name,
             String otpCode

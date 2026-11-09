@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -32,10 +31,11 @@ public class SecurityConfig {
     ) throws Exception {
 
         return http
+                // spa(): cookie XSRF-TOKEN legível pelo JS + aceita o valor cru do cookie no header
+                // X-XSRF-TOKEN (padrão do axios/Angular). Sem isso, o handler XOR padrão do
+                // Spring Security 6+ recusava o header e todo POST/DELETE autenticado dava 403.
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(
-                                CookieCsrfTokenRepository.withHttpOnlyFalse()
-                        )
+                        .spa()
                         .ignoringRequestMatchers(
                                 SecurityEndpoints.CSRF_IGNORED_ENDPOINTS
                         )

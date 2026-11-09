@@ -1,7 +1,7 @@
 package com.auth.api.core.auth.application.port.in.sign;
 
-import com.auth.api.core.auth.application.dto.response.AuthResponse;
+import com.auth.api.core.auth.application.dto.response.MfaChallengeResponse;
 
 public interface SignInUseCase {
-    AuthResponse execute(String email, String password, String ip, String device);
+    MfaChallengeResponse execute(String email, String password);
 }

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!--
+        Fragmentos compartilhados pelos templates de e-mail.
+        Uso:
+          <th:block th:replace="~{fragments/email-layout :: head-meta}"></th:block>
+          <style th:replace="~{fragments/email-layout :: styles}"></style>
+          <tr th:replace="~{fragments/email-layout :: header('Subtítulo')}"></tr>
+          <tr th:replace="~{fragments/email-layout :: footer}"></tr>
+    -->
+    <th:block th:fragment="head-meta">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="x-apple-disable-message-reformatting">
+        <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+        <meta name="color-scheme" content="light dark">
+        <meta name="supported-color-schemes" content="light dark">
+    </th:block>
+
+    <style th:fragment="styles">
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+        img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+        body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
+
+        @media screen and (max-width: 600px) {
+            .wrapper    { padding: 24px 12px !important; }
+            .px         { padding-left: 24px !important; padding-right: 24px !important; }
+            .content    { padding-top: 32px !important; padding-bottom: 32px !important; }
+            .h1         { font-size: 22px !important; }
+            .otp        { font-size: 30px !important; letter-spacing: 8px !important; }
+            .detail-label, .detail-value { display: block !important; width: 100% !important; }
+            .detail-value { padding-top: 4px !important; text-align: left !important; }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .bg-page    { background-color: #09090b !important; }
+            .bg-card    { background-color: #18181b !important; }
+            .bg-soft    { background-color: #27272a !important; }
+            .border     { border-color: #3f3f46 !important; }
+            .text-strong{ color: #fafafa !important; }
+            .text-body  { color: #d4d4d8 !important; }
+            .text-muted { color: #a1a1aa !important; }
+        }
+    </style>
+</head>
+<body>
+
+<table role="presentation">
+    <!-- Header -->
+    <tr th:fragment="header(subtitle)">
+        <td class="px" style="background-color:#18181b; padding:28px 40px;" bgcolor="#18181b">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td valign="middle" style="width:40px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td align="center" valign="middle" width="36" height="36" bgcolor="#10b981"
+                                    style="width:36px; height:36px; background-color:#10b981; border-radius:10px;
+                                           font-family:Arial, Helvetica, sans-serif; font-size:18px; font-weight:700;
+                                           color:#ffffff; line-height:36px;">
+                                    F
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td valign="middle" style="padding-left:12px; font-family:Arial, Helvetica, sans-serif;">
+                        <div style="font-size:18px; font-weight:700; color:#ffffff; line-height:1.2;">
+                            Financial API
+                        </div>
+                        <div th:text="${subtitle}"
+                             style="margin-top:2px; font-size:12px; color:#a1a1aa; line-height:1.4;">
+                            Subtítulo
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <!-- Footer -->
+    <tr th:fragment="footer">
+        <td class="px border" align="center"
+            style="border-top:1px solid #e4e4e7; padding:28px 40px; font-family:Arial, Helvetica, sans-serif;">
+            <div class="text-muted" style="font-size:12px; line-height:1.6; color:#71717a;">
+                Este é um e-mail automático. Por favor, não responda.
+            </div>
+            <div class="text-muted" style="margin-top:4px; font-size:12px; line-height:1.6; color:#71717a;">
+                A Financial API nunca solicita sua senha ou códigos por e-mail, telefone ou mensagem.
+            </div>
+            <div class="text-muted"
+                 th:text="|© ${#dates.year(#dates.createNow())} Financial API. Todos os direitos reservados.|"
+                 style="margin-top:12px; font-size:11px; color:#a1a1aa;">
+                © 2026 Financial API. Todos os direitos reservados.
+            </div>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

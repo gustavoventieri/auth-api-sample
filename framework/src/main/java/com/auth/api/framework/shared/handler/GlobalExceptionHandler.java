@@ -7,6 +7,7 @@ import com.auth.api.core.shared.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -56,6 +58,25 @@ public class GlobalExceptionHandler
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
+    /**
+     * Lock otimista: duas requisições concorrentes alteraram o mesmo registro
+     * (ex.: o mesmo mfaToken/código enviado duas vezes ao mesmo tempo). Só uma vence.
+     */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLock(
+            OptimisticLockingFailureException ex,
+            HttpServletRequest request
+    ) {
+
+        log.warn("Optimistic lock conflict on {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                "The request conflicted with a concurrent request. Please try again",
                 request.getRequestURI()
         );
     }
@@ -105,10 +126,16 @@ public class GlobalExceptionHandler
             AccessDeniedException ex
     ) throws IOException {
 
+        // CsrfException também é AccessDeniedException: separa a mensagem para não
+        // confundir token CSRF ausente/inválido com falta de permissão (role).
+        String message = ex instanceof CsrfException
+                ? "Invalid or missing CSRF token. Send the XSRF-TOKEN cookie value in the X-XSRF-TOKEN header"
+                : "You do not have permission to access this resource";
+
         buildSecurityReponse(
                 response,
                 HttpStatus.FORBIDDEN,
-                "You do not have permission to access this resource",
+                message,
                 request.getRequestURI()
         );
     }

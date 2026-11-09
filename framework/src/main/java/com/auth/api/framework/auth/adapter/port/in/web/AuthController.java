@@ -1,12 +1,13 @@
 package com.auth.api.framework.auth.adapter.port.in.web;
 
-import com.auth.api.core.auth.application.dto.response.AuthResponse;
+import com.auth.api.core.auth.application.dto.response.MfaChallengeResponse;
 import com.auth.api.core.auth.application.port.in.sign.SignInUseCase;
 import com.auth.api.core.auth.application.port.in.sign.SignUpUseCase;
 import com.auth.api.core.auth.application.port.in.emailVerification.VerifyEmailVerificationTokenUseCase;
 import com.auth.api.framework.auth.adapter.dto.EmailVerificationRequestValidator;
 import com.auth.api.framework.auth.adapter.dto.SignInRequestValidator;
 import com.auth.api.framework.auth.adapter.dto.SignUpRequestValidator;
+import com.auth.api.framework.auth.adapter.dto.response.MfaChallengeResponseDTO;
 import com.auth.api.framework.shared.dto.response.ControllerResponseDTO;
 import com.auth.api.framework.shared.handler.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,23 +16,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.Duration;
 
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "Authentication Controller")
 public class AuthController {
-
-    private static final String ACCESS_TOKEN_NAME = "access_token";
-    private static final String REFRESH_TOKEN_NAME = "refresh_token";
 
     private final SignInUseCase signInUseCase;
     private final SignUpUseCase signUpUseCase;
@@ -50,13 +43,14 @@ public class AuthController {
 
     @PostMapping("/sign-in")
     @Operation(
-            summary = "Sign in",
-            description = "Authenticate a user and create a new session."
+            summary = "Sign in (step 1 of 2)",
+            description = "Validate email and password. No session is created: the response carries an mfaToken "
+                    + "and a status telling the next step (MFA_SETUP_REQUIRED or MFA_REQUIRED)."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Authenticated successfully"
+                    description = "Password valid, MFA challenge issued"
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -69,7 +63,7 @@ public class AuthController {
                     )
             ),
             @ApiResponse(
-                    responseCode = "401",
+                    responseCode = "404",
                     description = "Invalid credentials",
                     content = @Content(
                             mediaType = "application/json",
@@ -79,29 +73,20 @@ public class AuthController {
                     )
             )
     })
-    public ResponseEntity<ControllerResponseDTO<String>> signIn(
-            HttpServletResponse servletResponse,
-            @Valid @RequestBody SignInRequestValidator request,
-            HttpServletRequest httpRequest
+    public ResponseEntity<ControllerResponseDTO<MfaChallengeResponseDTO>> signIn(
+            @Valid @RequestBody SignInRequestValidator request
     ) {
 
-        String ip = getClientIp(httpRequest);
-        String device = getDevice(httpRequest);
-
-        AuthResponse response = signInUseCase.execute(
+        MfaChallengeResponse response = signInUseCase.execute(
                 request.email(),
-                request.password(),
-                ip,
-                device
+                request.password()
         );
-
-        addAuthCookies(servletResponse, response);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ControllerResponseDTO<>(
-                        "Login successful",
-                        null
+                        "MFA required to complete sign in",
+                        MfaChallengeResponseDTO.from(response)
                 ));
     }
 
@@ -147,26 +132,17 @@ public class AuthController {
     @PostMapping("/verify-email")
     @Operation(
             summary = "Verify email",
-            description = "Verify the user's email and create a session."
+            description = "Verify the user's email. No session is created: the response carries an mfaToken "
+                    + "with status MFA_SETUP_REQUIRED so the user can link an authenticator app."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Email verified successfully"
+                    description = "Email verified, MFA setup challenge issued"
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Verification code expired or already used",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(
-                                    implementation = ErrorResponse.class
-                            )
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Invalid verification code",
+                    description = "Verification code invalid, expired or already used",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(
@@ -175,85 +151,21 @@ public class AuthController {
                     )
             )
     })
-    public ResponseEntity<ControllerResponseDTO<String>> verifyEmail(
-            HttpServletResponse servletResponse,
-            @Valid @RequestBody EmailVerificationRequestValidator request,
-            HttpServletRequest httpRequest
+    public ResponseEntity<ControllerResponseDTO<MfaChallengeResponseDTO>> verifyEmail(
+            @Valid @RequestBody EmailVerificationRequestValidator request
     ) {
 
-        String ip = getClientIp(httpRequest);
-        String device = getDevice(httpRequest);
-
-        AuthResponse response =
+        MfaChallengeResponse response =
                 verifyEmailVerificationTokenUseCase.execute(
                         request.codeOtp(),
-                        request.email(),
-                        ip,
-                        device
+                        request.email()
                 );
-
-        addAuthCookies(servletResponse, response);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ControllerResponseDTO<>(
-                        "Email verified successfully",
-                        null
+                        "Email verified successfully. Set up MFA to continue",
+                        MfaChallengeResponseDTO.from(response)
                 ));
-    }
-
-    private String getDevice(HttpServletRequest request) {
-        return request.getHeader("User-Agent");
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-
-        String forwarded = request.getHeader("X-Forwarded-For");
-
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-
-        return request.getRemoteAddr();
-    }
-
-    private void addAuthCookies(
-            HttpServletResponse response,
-            AuthResponse authResponse
-    ) {
-
-        ResponseCookie accessTokenCookie = ResponseCookie
-                .from(
-                        ACCESS_TOKEN_NAME,
-                        authResponse.accessToken()
-                )
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(Duration.ofMinutes(15))
-                .build();
-
-        ResponseCookie refreshTokenCookie = ResponseCookie
-                .from(
-                        REFRESH_TOKEN_NAME,
-                        authResponse.refreshToken()
-                )
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(Duration.ofDays(30))
-                .build();
-
-        response.addHeader(
-                "Set-Cookie",
-                accessTokenCookie.toString()
-        );
-
-        response.addHeader(
-                "Set-Cookie",
-                refreshTokenCookie.toString()
-        );
     }
 }

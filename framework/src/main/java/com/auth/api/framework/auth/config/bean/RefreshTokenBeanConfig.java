@@ -4,7 +4,7 @@ import com.auth.api.core.auth.application.port.in.accessToken.GenerateAccessToke
 import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.refreshToken.RenewRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
-import com.auth.api.core.auth.application.service.RenewRefreshTokenService;
+import com.auth.api.core.auth.application.service.refreshToken.RenewRefreshTokenService;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

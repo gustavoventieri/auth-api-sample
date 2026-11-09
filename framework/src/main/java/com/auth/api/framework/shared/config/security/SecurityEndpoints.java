@@ -12,6 +12,10 @@ public final class SecurityEndpoints {
             "/auth/password/forgot",
             "/auth/password/verify",
             "/auth/password/reset",
+            "/auth/mfa/totp/setup",
+            "/auth/mfa/totp/setup/confirm",
+            "/auth/mfa/totp/verify",
+            "/auth/mfa/recovery",
 
             "/sessions/refresh",
 
@@ -29,6 +33,10 @@ public final class SecurityEndpoints {
             "/auth/password/forgot",
             "/auth/password/verify",
             "/auth/password/reset",
+            "/auth/mfa/totp/setup",
+            "/auth/mfa/totp/setup/confirm",
+            "/auth/mfa/totp/verify",
+            "/auth/mfa/recovery",
             "/sessions/refresh",
             "/sessions/logout"
     };
@@ -40,6 +48,10 @@ public final class SecurityEndpoints {
                 || path.equals("/auth/password/forgot")
                 || path.equals("/auth/password/verify")
                 || path.equals("/auth/password/reset")
+                || path.equals("/auth/mfa/totp/setup")
+                || path.equals("/auth/mfa/totp/setup/confirm")
+                || path.equals("/auth/mfa/totp/verify")
+                || path.equals("/auth/mfa/recovery")
                 || path.equals("/sessions/refresh")
                 || path.equals("/scalar")
                 || path.startsWith("/scalar/")

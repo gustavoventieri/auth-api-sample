@@ -1,8 +1,10 @@
     package com.auth.api.framework.user.adapter.port.out.persistence;
 
+    import com.auth.api.core.shared.enumerated.MfaStatus;
     import com.auth.api.core.shared.enumerated.Roles;
     import jakarta.persistence.*;
     import lombok.*;
+    import org.hibernate.annotations.ColumnDefault;
 
     import java.time.LocalDateTime;
 
@@ -37,9 +39,22 @@
         @Column(name = "is_active", nullable = false)
         private boolean active;
 
+        // DEFAULT 'PENDING' permite que o ddl-auto adicione a coluna em tabelas que já têm usuários.
+        @Enumerated(EnumType.STRING)
+        @ColumnDefault("'PENDING'")
+        @Column(name = "mfa_status", nullable = false, length = 20)
+        private MfaStatus mfaStatus;
+
         @Column(name = "created_at", nullable = false, updatable = false)
         private LocalDateTime createdAt;
 
         @Column(name = "updated_at", nullable = false)
         private LocalDateTime updatedAt;
+
+        // Lock otimista: o save grava a linha inteira; sem isso, duas operações concorrentes
+        // (ex.: reset de senha + confirmação do MFA) podiam sobrescrever uma à outra.
+        // DEFAULT 0 garante que usuários já existentes recebam versão ao adicionar a coluna.
+        @Version
+        @ColumnDefault("0")
+        private Long version;
     }
