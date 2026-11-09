@@ -6,12 +6,14 @@ import com.auth.api.core.auth.domain.MfaChallengePurpose;
 import java.time.LocalDateTime;
 
 /**
- * @param status MFA_SETUP_REQUIRED (vincular autenticador) ou MFA_REQUIRED (informar código).
+ * @param status            MFA_SETUP_REQUIRED (vincular autenticador) ou MFA_REQUIRED (informar código).
+ * @param emailCodeRequired true quando um código foi enviado por e-mail e deve ir no /totp/setup.
  */
 public record MfaChallengeResponseDTO(
         String status,
         String mfaToken,
-        LocalDateTime expiresAt
+        LocalDateTime expiresAt,
+        boolean emailCodeRequired
 ) {
 
     public static final String MFA_SETUP_REQUIRED = "MFA_SETUP_REQUIRED";
@@ -22,6 +24,6 @@ public record MfaChallengeResponseDTO(
                 ? MFA_SETUP_REQUIRED
                 : MFA_REQUIRED;
 
-        return new MfaChallengeResponseDTO(status, response.mfaToken(), response.expiresAt());
+        return new MfaChallengeResponseDTO(status, response.mfaToken(), response.expiresAt(), response.emailCodeRequired());
     }
 }

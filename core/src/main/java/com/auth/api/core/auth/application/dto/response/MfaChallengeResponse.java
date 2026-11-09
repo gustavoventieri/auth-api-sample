@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 public record MfaChallengeResponse(
         MfaChallengePurpose purpose,
         String mfaToken,
-        LocalDateTime expiresAt
+        LocalDateTime expiresAt,
+        /** true quando um código foi enviado por e-mail e precisa ser informado no /totp/setup. */
+        boolean emailCodeRequired
 ) {
 }

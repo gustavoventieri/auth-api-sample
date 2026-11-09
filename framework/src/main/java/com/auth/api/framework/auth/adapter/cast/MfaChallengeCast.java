@@ -15,6 +15,8 @@ public class MfaChallengeCast {
                 .failedAttempts(challenge.failedAttempts())
                 .expiresAt(challenge.expiresAt())
                 .createdAt(challenge.createdAt())
+                .emailCodeHash(challenge.emailCodeHash())
+                .emailConfirmedAt(challenge.emailConfirmedAt())
                 .version(challenge.version())
                 .usedAt(challenge.usedAt())
                 .build();
@@ -30,6 +32,8 @@ public class MfaChallengeCast {
                 entity.getExpiresAt(),
                 entity.getCreatedAt(),
                 entity.getUsedAt(),
+                entity.getEmailCodeHash(),
+                entity.getEmailConfirmedAt(),
                 entity.getVersion()
         );
     }

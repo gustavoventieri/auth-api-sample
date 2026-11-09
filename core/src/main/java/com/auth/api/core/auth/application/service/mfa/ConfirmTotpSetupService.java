@@ -88,6 +88,12 @@ public class ConfirmTotpSetupService implements ConfirmTotpSetupUseCase {
             throw new BusinessException("MFA is already enabled");
         }
 
+        // um desafio que ainda aguarda o código do e-mail não pode confirmar o
+        // setup, mesmo que exista um segredo pendente criado por outro desafio.
+        if (challenge.requiresEmailCode()) {
+            throw new BusinessException("Email code is required to set up MFA. Call the setup endpoint first");
+        }
+
         UserTotpDomain pendingTotp = userTotpPersistencePort.findByUserId(user.id())
                 .filter(totp -> !totp.isConfirmed())
                 .orElseThrow(() -> new BusinessException("TOTP setup not started. Call the setup endpoint first"));

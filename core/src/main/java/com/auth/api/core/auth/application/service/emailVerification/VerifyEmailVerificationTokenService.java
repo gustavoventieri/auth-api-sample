@@ -70,11 +70,12 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
         UserDomain verifiedUser = userDomain.verify();
         EmailVerificationTokenDomain usedToken = token.markAsUsed();
 
-        // MFA é obrigatório: verificar o e-mail não cria sessão, apenas libera o setup do TOTP.
+        // verificar o e-mail não cria sessão, apenas libera o setup do TOTP.
         MfaChallengeResponse response = transactionManager.execute(() -> {
             userAuthenticationPort.save(verifiedUser);
             emailVerificationTokenPort.save(usedToken);
-            return issueMfaChallengeUseCase.execute(verifiedUser);
+            // O código do e-mail acabou de ser validado: o setup do TOTP pode seguir direto.
+            return issueMfaChallengeUseCase.execute(verifiedUser, true);
         });
 
         emailPort.send(

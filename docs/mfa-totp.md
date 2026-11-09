@@ -137,12 +137,16 @@ O MFA é **obrigatório**. Por isso:
    seria um bypass do MFA. Agora ele devolve um desafio de configuração do TOTP.
 3. A sessão (cookies `access_token` e `refresh_token`) só é criada depois que um código
    TOTP válido (ou um código de recuperação) é informado.
+4. **Vincular um autenticador exige senha + e-mail.** Se o setup começa pelo `/auth/sign-in`
+   (só a senha foi provada), a API envia um código por e-mail que precisa ser informado no
+   `/totp/setup`. Pelo `/auth/verify-email` esse passo não existe, porque o e-mail acabou de
+   ser comprovado.
 
 Cada usuário tem um campo `mfaStatus`:
 
 | `mfaStatus` | Significado                                     | O `sign-in` devolve      |
 |-------------|-------------------------------------------------|--------------------------|
-| `PENDING`   | Ainda não vinculou um autenticador (padrão)     | `MFA_SETUP_REQUIRED`     |
+| `PENDING`   | Ainda não vinculou um autenticador (padrão)     | `MFA_SETUP_REQUIRED` + `emailCodeRequired: true` |
 | `ENABLED`   | TOTP ativo                                      | `MFA_REQUIRED`           |
 
 ---
@@ -176,8 +180,35 @@ sequenceDiagram
     F->>U: Exibe os códigos de recuperação (uma única vez)
 ```
 
-Usuários `PENDING` que fazem login (por exemplo, contas antigas) seguem o mesmo caminho
-a partir do passo 5: o `/auth/sign-in` devolve `MFA_SETUP_REQUIRED`.
+### Setup pelo login (contas antigas ou após reset do admin)
+
+Quando um usuário `PENDING` entra pelo `/auth/sign-in`, só a senha foi provada. Para que
+**uma senha vazada não baste para vincular o autenticador de outra pessoa**, a API exige
+também um código enviado por e-mail antes de liberar o QR code:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuário
+    participant F as Frontend
+    participant API
+
+    F->>API: POST /auth/sign-in {email, password}
+    API-->>U: E-mail "Confirme que é você" com código de 6 dígitos
+    API-->>F: status=MFA_SETUP_REQUIRED, emailCodeRequired=true, mfaToken
+    U->>F: Digita o código do e-mail
+    F->>API: POST /auth/mfa/totp/setup {mfaToken, emailCode}
+    API-->>F: secret, otpAuthUri, qrCode
+    Note over F,API: daqui em diante é igual ao primeiro acesso<br/>(escanear o QR → /totp/setup/confirm)
+```
+
+- Um código de e-mail errado conta no **mesmo limite de 5 erros** do desafio.
+- Depois que o código é aceito, novas chamadas ao `/totp/setup` com o mesmo `mfaToken` (para
+  gerar outro QR) **não pedem o código de novo**.
+- O `/totp/setup/confirm` também recusa um desafio que ainda não confirmou o e-mail, mesmo que
+  exista um segredo pendente de uma tentativa anterior.
+- O e-mail avisa "Alguém entrou com a sua senha...": se não foi o dono, ele fica sabendo
+  **antes** de qualquer autenticador ser vinculado.
 
 ### Login do dia a dia
 
@@ -220,26 +251,32 @@ Security: quem autentica a chamada é o `mfaToken`.
   "data": {
     "status": "MFA_REQUIRED",
     "mfaToken": "q8m1Yt3...b2Q",
-    "expiresAt": "2026-11-08T21:05:00"
+    "expiresAt": "2026-11-08T21:05:00",
+    "emailCodeRequired": false
   }
 }
 ```
 
-`status` é `MFA_SETUP_REQUIRED` ou `MFA_REQUIRED`. Uma senha errada continua devolvendo
+`status` é `MFA_SETUP_REQUIRED` ou `MFA_REQUIRED`. `emailCodeRequired` é `true` só quando o
+status é `MFA_SETUP_REQUIRED` e veio do `sign-in`: nesse caso um código de 6 dígitos foi
+enviado por e-mail e deve ir no `/totp/setup`. Uma senha errada continua devolvendo
 **404** `Email or Password Invalid`. **Não há cookies** nesta resposta.
 
 ### `POST /auth/verify-email`
 
 Mesmo request de antes (`email`, `codeOtp`). A resposta agora tem o mesmo formato da do
-`sign-in`, com `status: "MFA_SETUP_REQUIRED"` e sem cookies.
+`sign-in`, com `status: "MFA_SETUP_REQUIRED"`, `emailCodeRequired: false` e sem cookies.
 
 ### `POST /auth/mfa/totp/setup`
 
 Exige um `mfaToken` com status `MFA_SETUP_REQUIRED`.
 
 ```json
-{ "mfaToken": "..." }
+{ "mfaToken": "...", "emailCode": "123456" }
 ```
+
+`emailCode` só é obrigatório quando o `sign-in` respondeu `emailCodeRequired: true`, e só na
+primeira chamada. Nos outros casos, pode omitir.
 
 **200** (com `Cache-Control: no-store`):
 
@@ -299,12 +336,15 @@ pontas são ignorados.
 
 | `message`                                                   | Quando                                                        | O que o front faz                 |
 |-------------------------------------------------------------|---------------------------------------------------------------|-----------------------------------|
-| `Invalid MFA code`                                          | Código errado ou reutilizado                                  | Pede o código de novo             |
+| `Invalid MFA code`                                          | Código TOTP, de recuperação ou do e-mail errado (ou TOTP reutilizado) | Pede o código de novo     |
 | `Too many invalid MFA codes. Sign in again`                 | 5º código errado no mesmo desafio                             | Volta para a tela de login        |
 | `MFA token is expired, was already used or has too many failed attempts. Sign in again` | Desafio expirado, já usado ou bloqueado | Volta para a tela de login        |
 | `MFA token is invalid`                                      | Token inexistente ou usado no endpoint errado                 | Volta para a tela de login        |
 | `TOTP setup not started. Call the setup endpoint first`     | `/setup/confirm` chamado antes do `/setup`                    | Chama o `/setup`                  |
 | `MFA is already enabled`                                    | `/setup` chamado por quem já tem MFA                          | Vai para o `/totp/verify`         |
+| `Email code is required to set up MFA. Check your inbox`    | `/setup` sem `emailCode` quando `emailCodeRequired: true`     | Pede o código enviado por e-mail  |
+| `Email code is required to set up MFA. Call the setup endpoint first` | `/setup/confirm` antes de validar o código do e-mail | Chama o `/setup` com `emailCode`  |
+| `emailCode: Email code must contain 6 digits`               | Falha de validação do código do e-mail                        | Valida o campo no front           |
 | `code: MFA code must contain 6 digits`                      | Falha de validação do código                                  | Valida o campo no front           |
 
 Além disso, **409** `The request conflicted with a concurrent request. Please try again`
@@ -343,6 +383,10 @@ Em uma única transação, o reset:
 Depois disso, grava o log de auditoria `AUDIT mfa_reset admin=… user=… revokedSessions=… reason="…"`
 e envia ao usuário o e-mail "MFA redefinido", com o alerta "não foi você?".
 
+No próximo login, o usuário configura um autenticador novo seguindo o
+[setup pelo login](#setup-pelo-login-contas-antigas-ou-após-reset-do-admin), ou seja,
+**senha + código do e-mail**.
+
 | Resposta | Quando                                                          |
 |----------|-----------------------------------------------------------------|
 | 403      | Sem header CSRF válido, ou usuário sem `ROLE_ADMIN`             |
@@ -366,7 +410,8 @@ login(email, senha)
         ├─ "MFA_REQUIRED"        ─► tela "Digite o código do autenticador"
         │                            └─ POST /auth/mfa/totp/verify
         │                            └─ link "Perdi meu celular" ─► POST /auth/mfa/recovery
-        └─ "MFA_SETUP_REQUIRED"  ─► POST /auth/mfa/totp/setup
+        └─ "MFA_SETUP_REQUIRED"  ─► se emailCodeRequired: tela "Digite o código enviado ao seu e-mail"
+                                     └─ POST /auth/mfa/totp/setup (com emailCode, se exigido)
                                      └─ tela com QR code + chave manual
                                      └─ POST /auth/mfa/totp/setup/confirm
                                      └─ tela "Guarde seus códigos de recuperação"
@@ -441,6 +486,8 @@ O `ddl-auto: update` cria tudo automaticamente.
 | `purpose`         | `SETUP` ou `VERIFICATION`                          |
 | `failed_attempts` | Bloqueia em 5                                      |
 | `expires_at` / `used_at` | Expira em 5 min e só pode ser usado uma vez |
+| `email_code_hash`   | SHA-256 do código enviado por e-mail (só no setup vindo do `sign-in`) |
+| `email_confirmed_at`| Quando o código do e-mail foi validado; libera o setup             |
 
 **`tb_mfa_recovery_codes`**: 10 por usuário, `code_hash` (SHA-256) e `used_at`.
 
@@ -456,7 +503,7 @@ alter table if exists tb_users
 ```
 
 Todos os usuários existentes ficam `PENDING` e configuram o autenticador **no próximo
-login**. Não precisa de script manual. Isso foi validado simulando uma tabela antiga com
+login**, confirmando um código enviado por e-mail antes do QR code. Não precisa de script manual. Isso foi validado simulando uma tabela antiga com
 usuários.
 
 ---
@@ -476,6 +523,7 @@ usuários.
 | Token de setup usado para logar (e vice-versa)| `purpose` validado em cada endpoint                                                            |
 | Cache de QR code ou códigos de recuperação    | `Cache-Control: no-store` no `/setup` e no `/setup/confirm`                                    |
 | Ativação de MFA sem o usuário saber           | E-mail "MFA ativado" com alerta de "Não foi você?"                                             |
+| Senha vazada de conta `PENDING` (antiga ou resetada): atacante vincula o **próprio** autenticador | Setup vindo do `sign-in` exige também um código enviado por e-mail (senha **+** e-mail); erros contam no limite de 5 |
 | Requisições concorrentes com o mesmo desafio/código | **Lock otimista** (`@Version`) em usuário, desafio, segredo e recovery codes: só uma vence, as outras recebem 409 |
 | Perda do autenticador e dos recovery codes    | Reset pelo admin, com auditoria, e-mail ao usuário e revogação de todas as sessões; admin não reseta o próprio MFA |
 
@@ -512,7 +560,7 @@ core/src/main/java/com/auth/api/core/
             │   ├── IssueAuthTokensService.java
             │   └── SignInNotifier.java               # e-mail de novo acesso (pós-MFA)
             ├── mfa/
-            │   ├── IssueMfaChallengeService.java
+            │   ├── IssueMfaChallengeService.java     # emite o desafio (+ código por e-mail no setup via sign-in)
             │   ├── MfaChallengeValidator.java        # valida token/purpose, conta falhas
             │   ├── SetupTotpService.java
             │   ├── ConfirmTotpSetupService.java
@@ -538,7 +586,7 @@ framework/src/main/java/com/auth/api/framework/auth/
 ├── utils/token/                                  # MfaChallengeTokenGenerator, MfaHasher
 └── config/bean/MfaBeanConfig.java
 
-framework/src/main/resources/templates/mfa-enabled-email.html, mfa-reset-email.html
+framework/src/main/resources/templates/mfa-enabled-email.html, mfa-reset-email.html, mfa-setup-code-email.html
 ```
 
 **Por que não usar o `DefaultCodeVerifier` da lib?** Ele só devolve `true`/`false`. Para
@@ -559,12 +607,18 @@ segredo, URI, QR code e códigos de recuperação) também vem da lib.
   adulteração, chave errada e validação da chave.
 
 **Ponta a ponta:** o fluxo completo foi exercitado contra a aplicação rodando (banco
-isolado e SMTP falso), com **25/25 verificações**: cadastro, setup, confirmação, login,
+isolado e SMTP falso), com **27/27 verificações**: cadastro, setup, confirmação, login,
 replay, tolerância de relógio, códigos de recuperação, bloqueio após 5 erros, troca de
 `purpose`, ausência de cookies antes do MFA e envio dos e-mails.
 
 Também foram verificados:
 
+- **Código por e-mail no setup (15/15):** o `sign-in` de um usuário `PENDING` responde
+  `emailCodeRequired` e envia o e-mail. O `/setup` é recusado sem código, com código
+  malformado ou com código errado (que conta como tentativa), e passa com o código certo. A
+  segunda chamada não pede o código de novo. O `/setup/confirm` é bloqueado antes do e-mail,
+  mesmo com um TOTP válido de um segredo pendente. Usuário `ENABLED` não recebe código, e 5
+  códigos errados bloqueiam o desafio até para o código certo.
 - **Lock otimista (6/6):** 12 requisições simultâneas com o mesmo `mfaToken` e código
   resultaram em exatamente 1 × `200` e 11 × `409`, com uma única sessão gravada. O mesmo
   vale para o `/recovery`, e o código de recuperação foi marcado como usado uma única vez.
@@ -630,7 +684,7 @@ Você recebe por e-mail um **código de verificação** de 6 dígitos, válido p
 Copie o `mfaToken` da resposta. O `status` vem como `MFA_SETUP_REQUIRED`.
 
 ```json
-{ "data": { "status": "MFA_SETUP_REQUIRED", "mfaToken": "q8m1Yt3...", "expiresAt": "..." } }
+{ "data": { "status": "MFA_SETUP_REQUIRED", "mfaToken": "q8m1Yt3...", "expiresAt": "...", "emailCodeRequired": false } }
 ```
 
 **3. Gerar o segredo: `POST /auth/mfa/totp/setup`**
@@ -679,6 +733,21 @@ Resposta: `status: "MFA_REQUIRED"` e um **novo** `mfaToken`.
 
 A sessão é criada e chega o e-mail de novo acesso.
 
+### Conta antiga ou depois de um reset (setup pelo login)
+
+Se o `sign-in` responder `"status": "MFA_SETUP_REQUIRED"` com `"emailCodeRequired": true`:
+
+1. Abra o e-mail **"Confirm it's you to set up two-factor authentication"** e copie o código
+   de 6 dígitos (válido enquanto o `mfaToken` valer, 5 minutos).
+2. Chame **`POST /auth/mfa/totp/setup`** com o código:
+
+   ```json
+   { "mfaToken": "<mfaToken do sign-in>", "emailCode": "583104" }
+   ```
+
+3. A resposta é a mesma do **passo 3** do primeiro acesso: vincule o app pelo `secret` ou pelo
+   `qrCode` e siga para o **passo 4** (`/totp/setup/confirm`).
+
 ### Perdi o celular
 
 No passo 6, use **`POST /auth/mfa/recovery`** em vez do `/totp/verify`:
@@ -703,7 +772,8 @@ admin pode resetar o MFA (passo seguinte).
    { "reason": "Ticket 123 - identidade confirmada" }
    ```
 
-4. O usuário afetado volta para `MFA_SETUP_REQUIRED`: no próximo login ele refaz os passos 3 e 4.
+4. O usuário afetado volta para `MFA_SETUP_REQUIRED`: no próximo login ele recebe um código
+   por e-mail e segue o roteiro [Conta antiga ou depois de um reset](#conta-antiga-ou-depois-de-um-reset-setup-pelo-login).
 
 São necessários **dois usuários**, porque um admin não pode resetar o próprio MFA.
 
@@ -712,6 +782,7 @@ São necessários **dois usuários**, porque um admin não pode resetar o própr
 | Situação | O que fazer |
 |----------|-------------|
 | `MFA token is expired...` | O `mfaToken` dura **5 minutos** e só pode ser usado uma vez. Repita o `sign-in` (ou o `verify-email`, no primeiro acesso) |
+| `Email code is required...` | O `sign-in` pediu `emailCodeRequired`: envie o código do e-mail no campo `emailCode` do `/totp/setup` |
 | `Invalid MFA code` | Espere o próximo código do app. Se o erro continuar, confira se o relógio do celular está no horário automático |
 | `Too many invalid MFA codes` | Foram 5 erros nesse desafio. Faça o `sign-in` de novo |
 | `MFA token is invalid` | O token foi usado no endpoint errado (ex.: token de setup no `/totp/verify`) ou um `sign-in` mais novo o substituiu |

@@ -13,9 +13,7 @@ import dev.samstevens.totp.qr.ZxingPngQrGenerator;
 import dev.samstevens.totp.recovery.RecoveryCodeGenerator;
 import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
-import dev.samstevens.totp.time.SystemTimeProvider;
 import dev.samstevens.totp.time.TimeProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -48,13 +46,11 @@ public class TotpAdapter implements TotpPort {
     private final TimeProvider timeProvider;
     private final String issuer;
 
-    @Autowired
-    public TotpAdapter(MfaProperties mfaProperties) {
-        this(mfaProperties, new SystemTimeProvider());
-    }
-
-    /** Usado nos testes para fixar o relógio. */
-    TotpAdapter(MfaProperties mfaProperties, TimeProvider timeProvider) {
+    /**
+     * @param timeProvider relógio usado no cálculo do time step (bean em MfaBeanConfig;
+     *                     nos testes, um relógio fixo).
+     */
+    public TotpAdapter(MfaProperties mfaProperties, TimeProvider timeProvider) {
         this.issuer = mfaProperties.issuer();
         this.timeProvider = timeProvider;
     }

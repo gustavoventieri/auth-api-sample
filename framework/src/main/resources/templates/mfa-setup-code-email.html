@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/email-layout :: head-meta}"></th:block>
+    <title>Confirme que é você</title>
+    <style th:replace="~{fragments/email-layout :: styles}"></style>
+</head>
+
+<body class="bg-page" style="margin:0; padding:0; background-color:#f4f4f5;">
+
+<!-- Preheader -->
+<div style="display:none; max-height:0; max-width:0; overflow:hidden; opacity:0; mso-hide:all; font-size:1px; line-height:1px; color:#f4f4f5;">
+    Código para configurar a autenticação em dois fatores. Válido por 5 minutos.
+    &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
+</div>
+
+<table role="presentation" class="bg-page wrapper" width="100%" cellpadding="0" cellspacing="0" border="0"
+       bgcolor="#f4f4f5" style="background-color:#f4f4f5; padding:40px 16px;">
+    <tr>
+        <td align="center">
+            <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+            <table role="presentation" class="bg-card" width="100%" cellpadding="0" cellspacing="0" border="0"
+                   bgcolor="#ffffff"
+                   style="max-width:600px; background-color:#ffffff; border-radius:16px; overflow:hidden;
+                          box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+
+                <tr th:replace="~{fragments/email-layout :: header('Segurança da conta')}"></tr>
+
+                <tr>
+                    <td class="px content" style="padding:40px; font-family:Arial, Helvetica, sans-serif;">
+
+                        <span style="display:inline-block; padding:6px 12px; border-radius:999px;
+                                     background-color:#eff6ff; color:#1d4ed8; font-size:11px; font-weight:700;
+                                     letter-spacing:.8px;">
+                            CONFIGURAÇÃO DE MFA
+                        </span>
+
+                        <h1 class="h1 text-strong"
+                            style="margin:20px 0 12px; font-size:26px; line-height:1.3; font-weight:700; color:#18181b;">
+                            Confirme que é você
+                        </h1>
+
+                        <p class="text-body" style="margin:0 0 28px; font-size:15px; line-height:1.7; color:#52525b;">
+                            Olá, <strong class="text-strong" th:text="${name}" style="color:#18181b;">Usuário</strong>.
+                            Alguém entrou com a sua senha e está configurando a autenticação em dois
+                            fatores da sua conta na Financial API. Digite o código abaixo na aplicação
+                            para continuar.
+                        </p>
+
+                        <!-- OTP -->
+                        <table role="presentation" class="bg-soft border" width="100%" cellpadding="0" cellspacing="0" border="0"
+                               bgcolor="#fafafa"
+                               style="background-color:#fafafa; border:1px solid #e4e4e7; border-radius:12px;">
+                            <tr>
+                                <td align="center" style="padding:32px 20px;">
+                                    <div class="text-muted"
+                                         style="font-size:11px; font-weight:700; color:#71717a;
+                                                text-transform:uppercase; letter-spacing:1.2px;">
+                                        Código de confirmação
+                                    </div>
+                                    <div class="otp text-strong" th:text="${otpCode}"
+                                         style="margin-top:16px; font-family:'Courier New', Courier, monospace;
+                                                font-size:38px; line-height:1; font-weight:700;
+                                                letter-spacing:12px; padding-left:12px; color:#18181b;">
+                                        000000
+                                    </div>
+                                    <div class="text-muted" style="margin-top:18px; font-size:12px; color:#71717a;">
+                                        Expira em <strong>5 minutos</strong>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Aviso -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                               style="margin-top:28px;">
+                            <tr>
+                                <td style="border-left:3px solid #f59e0b; padding:4px 0 4px 16px;">
+                                    <div class="text-strong" style="font-size:14px; font-weight:700; color:#18181b;">
+                                        Não foi você?
+                                    </div>
+                                    <div class="text-muted" style="margin-top:6px; font-size:13px; line-height:1.6; color:#71717a;">
+                                        Sua senha pode ter vazado. <strong>Não compartilhe este código</strong>
+                                        e redefina sua senha imediatamente. Sem este código, ninguém consegue
+                                        vincular um autenticador à sua conta.
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <tr th:replace="~{fragments/email-layout :: footer}"></tr>
+
+            </table>
+            <!--[if mso]></td></tr></table><![endif]-->
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

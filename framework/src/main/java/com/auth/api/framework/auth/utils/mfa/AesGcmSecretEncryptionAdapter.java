@@ -70,7 +70,7 @@ public class AesGcmSecretEncryptionAdapter implements SecretEncryptionPort {
 
     private static SecretKey buildKey(String base64Key) {
         if (base64Key == null || base64Key.isBlank()) {
-            throw new IllegalStateException("app.security.mfa.encryption-key (MFA_ENCRYPTION_KEY) is not configured");
+            throw new IllegalStateException("MFA_ENCRYPTION_KEY is not configured");
         }
 
         byte[] keyBytes;

@@ -8,7 +8,7 @@ import com.auth.api.core.auth.application.port.in.mfa.VerifyRecoveryCodeUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.VerifyTotpUseCase;
 import com.auth.api.framework.auth.adapter.dto.MfaCodeRequestValidator;
 import com.auth.api.framework.auth.adapter.dto.MfaRecoveryCodeRequestValidator;
-import com.auth.api.framework.auth.adapter.dto.MfaTokenRequestValidator;
+import com.auth.api.framework.auth.adapter.dto.MfaSetupRequestValidator;
 import com.auth.api.framework.auth.adapter.dto.response.RecoveryCodesResponseDTO;
 import com.auth.api.framework.auth.adapter.dto.response.TotpSetupResponseDTO;
 import com.auth.api.framework.auth.adapter.port.in.web.support.AuthCookieWriter;
@@ -65,20 +65,21 @@ public class MfaController {
             summary = "Start TOTP setup",
             description = "Requires an mfaToken with status MFA_SETUP_REQUIRED. Generates a TOTP secret and returns "
                     + "the QR code / otpauth URI to be scanned by Google Authenticator, Authy, etc. "
-                    + "Calling it again replaces the pending secret."
+                    + "When the sign-in answered emailCodeRequired=true, send the 6-digit code received by email "
+                    + "in emailCode (only on the first call). Calling it again replaces the pending secret."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Secret generated"),
             @ApiResponse(
                     responseCode = "400",
-                    description = "MFA token invalid, expired or MFA already enabled",
+                    description = "MFA token invalid/expired, email code missing/invalid or MFA already enabled",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
     public ResponseEntity<ControllerResponseDTO<TotpSetupResponseDTO>> setup(
-            @Valid @RequestBody MfaTokenRequestValidator request
+            @Valid @RequestBody MfaSetupRequestValidator request
     ) {
-        TotpSetupResponseDTO body = TotpSetupResponseDTO.from(setupTotpUseCase.execute(request.mfaToken()));
+        TotpSetupResponseDTO body = TotpSetupResponseDTO.from(setupTotpUseCase.execute(request.mfaToken(), request.emailCode()));
 
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())

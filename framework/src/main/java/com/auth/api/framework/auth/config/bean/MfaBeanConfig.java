@@ -3,7 +3,9 @@ package com.auth.api.framework.auth.config.bean;
 import com.auth.api.core.auth.application.port.in.mfa.AdminResetMfaUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.ConfirmTotpSetupUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.GenerateMfaChallengeTokenUseCase;
+import com.auth.api.core.auth.application.port.in.mfa.GenerateMfaEmailCodeUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.HashMfaChallengeTokenUseCase;
+import com.auth.api.core.auth.application.port.in.mfa.HashMfaEmailCodeUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.HashRecoveryCodeUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.IssueMfaChallengeUseCase;
 import com.auth.api.core.auth.application.port.in.mfa.SetupTotpUseCase;
@@ -28,11 +30,19 @@ import com.auth.api.core.shared.email.EmailPort;
 import com.auth.api.core.shared.email.EmailTemplateUseCase;
 import com.auth.api.core.shared.transaction.TransactionManager;
 import com.auth.api.core.user.application.port.out.UserAuthenticationPersistencePort;
+import dev.samstevens.totp.time.SystemTimeProvider;
+import dev.samstevens.totp.time.TimeProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MfaBeanConfig {
+
+    /** Relógio do TOTP (relógio do sistema; mantenha o servidor sincronizado via NTP). */
+    @Bean
+    public TimeProvider totpTimeProvider() {
+        return new SystemTimeProvider();
+    }
 
     @Bean
     public SignInNotifier signInNotifier(
@@ -60,19 +70,29 @@ public class MfaBeanConfig {
             MfaChallengePersistencePort mfaChallengePersistencePort,
             GenerateMfaChallengeTokenUseCase generateMfaChallengeTokenUseCase,
             HashMfaChallengeTokenUseCase hashMfaChallengeTokenUseCase,
-            TransactionManager transactionManager
+            GenerateMfaEmailCodeUseCase generateMfaEmailCodeUseCase,
+            HashMfaEmailCodeUseCase hashMfaEmailCodeUseCase,
+            TransactionManager transactionManager,
+            EmailPort emailPort,
+            EmailTemplateUseCase emailTemplateUseCase
     ) {
         return new IssueMfaChallengeService(
                 mfaChallengePersistencePort,
                 generateMfaChallengeTokenUseCase,
                 hashMfaChallengeTokenUseCase,
-                transactionManager
+                generateMfaEmailCodeUseCase,
+                hashMfaEmailCodeUseCase,
+                transactionManager,
+                emailPort,
+                emailTemplateUseCase
         );
     }
 
     @Bean
     public SetupTotpUseCase setupTotpUseCase(
             MfaChallengeValidator mfaChallengeValidator,
+            MfaChallengePersistencePort mfaChallengePersistencePort,
+            HashMfaEmailCodeUseCase hashMfaEmailCodeUseCase,
             UserTotpPersistencePort userTotpPersistencePort,
             TotpPort totpPort,
             SecretEncryptionPort secretEncryptionPort,
@@ -80,6 +100,8 @@ public class MfaBeanConfig {
     ) {
         return new SetupTotpService(
                 mfaChallengeValidator,
+                mfaChallengePersistencePort,
+                hashMfaEmailCodeUseCase,
                 userTotpPersistencePort,
                 totpPort,
                 secretEncryptionPort,

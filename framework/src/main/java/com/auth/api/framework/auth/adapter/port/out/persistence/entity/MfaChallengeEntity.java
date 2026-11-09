@@ -43,6 +43,12 @@ public class MfaChallengeEntity {
     @Column(name = "used_at")
     private LocalDateTime usedAt;
 
+    @Column(name = "email_code_hash", length = 64)
+    private String emailCodeHash;
+
+    @Column(name = "email_confirmed_at")
+    private LocalDateTime emailConfirmedAt;
+
     // Lock otimista: UPDATE ... WHERE version = ?; requisições concorrentes sobre o mesmo
     // registro falham com OptimisticLockingFailureException em vez de passarem as duas.
     @Version

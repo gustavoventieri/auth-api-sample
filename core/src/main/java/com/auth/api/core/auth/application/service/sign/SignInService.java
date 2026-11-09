@@ -45,6 +45,7 @@ public class SignInService implements SignInUseCase {
             throw new NotFoundException(INVALID_CREDENTIALS);
         }
 
-        return issueMfaChallengeUseCase.execute(userDomain);
+        // Se o MFA estiver PENDING, o setup exigirá também um código do e-mail
+        return issueMfaChallengeUseCase.execute(userDomain, false);
     }
 }

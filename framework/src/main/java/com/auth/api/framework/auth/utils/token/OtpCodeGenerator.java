@@ -1,6 +1,7 @@
 package com.auth.api.framework.auth.utils.token;
 
 import com.auth.api.core.auth.application.port.in.emailVerification.GenerateEmailVerificationTokenUseCase;
+import com.auth.api.core.auth.application.port.in.mfa.GenerateMfaEmailCodeUseCase;
 import com.auth.api.core.auth.application.port.in.password.reset.GenerateResetPasswordVerificationTokenUseCase;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +10,8 @@ import java.security.SecureRandom;
 @Component
 public class OtpCodeGenerator implements
         GenerateEmailVerificationTokenUseCase,
-        GenerateResetPasswordVerificationTokenUseCase {
+        GenerateResetPasswordVerificationTokenUseCase,
+        GenerateMfaEmailCodeUseCase {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 

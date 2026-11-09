@@ -89,6 +89,27 @@ public class ThymeleafEmailTemplateService
     }
 
     @Override
+    public String buildMfaSetupCodeEmail(String name, String otpCode) {
+
+        Context context = new Context();
+
+        context.setVariable(
+                "name",
+                name
+        );
+
+        context.setVariable(
+                "otpCode",
+                otpCode
+        );
+
+        return templateEngine.process(
+                "mfa-setup-code-email",
+                context
+        );
+    }
+
+    @Override
     public String buildAccountCreatedEmail(
             String name,
             String otpCode

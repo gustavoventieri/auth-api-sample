@@ -21,6 +21,12 @@ public record MfaChallengeDomain(
         LocalDateTime expiresAt,
         LocalDateTime createdAt,
         LocalDateTime usedAt,
+        /**
+         * Hash do código enviado por e-mail quando o setup do TOTP veio do sign-in (só senha).
+         * null = não exige confirmação de e-mail (ex.: desafio emitido pelo verify-email).
+         */
+        String emailCodeHash,
+        LocalDateTime emailConfirmedAt,
         /** Versão para lock otimista (null = ainda não persistido). */
         Long version
 ) implements ExpirableToken {
@@ -39,6 +45,24 @@ public record MfaChallengeDomain(
                 .failedAttempts(0)
                 .createdAt(now)
                 .expiresAt(now.plus(TTL))
+                .build();
+    }
+
+    /** Exige o código do e-mail antes de liberar o setup do TOTP. */
+    public MfaChallengeDomain withEmailCode(String emailCodeHash) {
+        return this.toBuilder()
+                .emailCodeHash(emailCodeHash)
+                .build();
+    }
+
+    /** true enquanto o setup estiver bloqueado aguardando o código do e-mail. */
+    public boolean requiresEmailCode() {
+        return emailCodeHash != null && emailConfirmedAt == null;
+    }
+
+    public MfaChallengeDomain confirmEmail() {
+        return this.toBuilder()
+                .emailConfirmedAt(LocalDateTime.now())
                 .build();
     }
 
