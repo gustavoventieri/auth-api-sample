@@ -1,7 +1,7 @@
 # TO-DO: revogação imediata do access token (JWT)
 
 > **Status:** pendente · **Prioridade sugerida:** média (alta para uma API financeira)
-> **Relacionado:** [authentication-flow.md › Sessão](../authentication-flow.md#7-sessão-requisições-autenticadas-refresh-logout-e-revogação)
+> **Relacionado:** [mfa-totp.md](../mfa-totp.md)
 
 ## O problema
 
@@ -70,4 +70,4 @@ da revogação.
 - [ ] `SecurityFilter`: validar `tv` (com cache)
 - [ ] Incrementar a versão nos pontos listados acima
 - [ ] Testes: o token antigo é recusado logo após o reset de MFA, a desativação e a troca de papel
-- [ ] Atualizar [authentication-flow.md](../authentication-flow.md) (seções 7, 9 e 13)
+- [ ] Atualizar [mfa-totp.md](../mfa-totp.md) (reset pelo admin e limitações)

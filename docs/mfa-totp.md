@@ -7,11 +7,9 @@ Todo login exige um segundo fator: um código de 6 dígitos gerado por um **app 
 O padrão usado é o **TOTP (RFC 6238)**, implementado com a biblioteca
 [`dev.samstevens.totp`](https://github.com/samdjstevens/java-totp) `1.7.1`.
 
-> O fluxo de autenticação completo (cadastro, login, sessão, reset de senha e admin), com
-> fluxogramas, está em **[authentication-flow.md](authentication-flow.md)**.
-
 ## Sumário
 
+- [Como o TOTP funciona](#como-o-totp-funciona)
 - [Visão geral](#visão-geral)
 - [Fluxos](#fluxos)
 - [Endpoints](#endpoints)
@@ -24,6 +22,108 @@ O padrão usado é o **TOTP (RFC 6238)**, implementado com a biblioteca
 - [Arquitetura (onde está cada coisa)](#arquitetura-onde-está-cada-coisa)
 - [Testes](#testes)
 - [Limitações e próximos passos](#limitações-e-próximos-passos)
+- [Passo a passo: usando a API pelos endpoints](#passo-a-passo-usando-a-api-pelos-endpoints)
+
+## Como o TOTP funciona
+
+TOTP (*Time-based One-Time Password*, [RFC 6238](https://datatracker.ietf.org/doc/html/rfc6238))
+é um código de 6 dígitos que **o celular e o servidor calculam cada um por conta própria**, sem
+trocar mensagens, a partir de duas coisas que os dois têm: um **segredo compartilhado** e o
+**relógio**. Como só quem tem o segredo consegue gerar o código certo, informar o código prova
+que você está com o celular onde o segredo foi cadastrado.
+
+```mermaid
+flowchart LR
+    S[(Segredo<br/>compartilhado)] --> H
+    C[Relógio<br/>Unix time] --> T["T = ⌊tempo / 30⌋"] --> H[HMAC-SHA1]
+    H --> X[Truncamento<br/>dinâmico] --> M["mod 10⁶"] --> R([Código de 6 dígitos])
+```
+
+### Passo 1: o segredo é combinado uma única vez (setup)
+
+1. O servidor gera **20 bytes aleatórios (160 bits)**, com `SecureRandom`, e os codifica em
+   **Base32**, o que dá 32 caracteres como `JBSWY3DPEHPK3PXP...`.
+2. O segredo vai para o app dentro de uma URI `otpauth://`, normalmente em forma de QR code:
+
+   ```
+   otpauth://totp/Financial%20API:joao%40email.com?secret=JBSW...&issuer=Financial%20API&algorithm=SHA1&digits=6&period=30
+   ```
+
+3. A partir daí **os dois lados guardam o mesmo segredo**: o app no celular e o servidor no
+   banco (criptografado com AES-256-GCM). O segredo nunca mais trafega.
+
+### Passo 2: o tempo vira um contador
+
+Os dois lados dividem o horário atual (segundos desde 1970, *Unix time*) por 30 e descartam a
+parte decimal:
+
+```
+T = floor(unix_time / 30)
+```
+
+`T` é o *time step*. Ele muda a cada 30 segundos, e é por isso que o código do app muda a cada
+30 segundos. Celular e servidor chegam ao mesmo `T` sem conversar, desde que os relógios
+estejam razoavelmente certos.
+
+### Passo 3: HMAC do contador com o segredo
+
+O `T` vira 8 bytes (*big-endian*) e passa por um **HMAC-SHA1** usando o segredo como chave. O
+resultado são 20 bytes que parecem aleatórios, mas são determinísticos: mesmo segredo e
+mesmo `T` dão sempre o mesmo resultado.
+
+### Passo 4: truncamento dinâmico
+
+Dos 20 bytes, escolhem-se 4:
+
+1. `offset` = os 4 bits mais baixos do **último** byte (um número de 0 a 15);
+2. pegam-se os 4 bytes a partir de `offset`;
+3. zera-se o bit mais alto, o que dá um inteiro positivo de 31 bits.
+
+### Passo 5: o código de 6 dígitos
+
+```
+código = inteiro_31_bits mod 1.000.000   (com zeros à esquerda, ex.: 042917)
+```
+
+### Exemplo real (vetor de teste da RFC 6238)
+
+| Etapa                 | Valor                                                    |
+|-----------------------|----------------------------------------------------------|
+| Segredo (ASCII)       | `12345678901234567890`                                   |
+| Segredo (Base32)      | `GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ`                       |
+| Unix time             | `59`                                                     |
+| `T = ⌊59 / 30⌋`       | `1`                                                      |
+| HMAC-SHA1             | `75a48a19d4cbe100644e8ac1397eea747a2d33ab`               |
+| `offset` (último byte `ab` → `b`) | `11`                                         |
+| 4 bytes a partir do 11 | `c1397eea` → sem o bit alto → `1094287082`              |
+| `mod 10⁶`             | **`287082`**                                             |
+
+A RFC usa 8 dígitos nesse exemplo e chega a `94287082`. Os últimos 6 dígitos (`287082`) são
+exatamente o que a nossa API e o Google Authenticator calculariam.
+
+### Passo 6: como o servidor valida
+
+```mermaid
+flowchart TD
+    A[Código recebido] --> B{6 dígitos numéricos?}
+    B -->|não| X[Inválido]
+    B -->|sim| C["Calcula os códigos de T-1, T e T+1<br/>(tolerância de ±30 s de relógio)"]
+    C --> D{Algum bate?<br/>comparação em tempo constante}
+    D -->|não| X
+    D -->|sim| E{Esse passo é maior que o<br/>last_used_time_step salvo?}
+    E -->|não| R[Inválido: replay<br/>código já usado]
+    E -->|sim| F[Válido · salva o passo usado]
+```
+
+- **Janela ±1:** se o celular estiver até 30 s adiantado ou atrasado, o código ainda vale.
+- **Anti-replay:** depois que um código é aceito, ele e qualquer código **anterior** passam a
+  ser recusados, mesmo dentro dos 30 s em que ainda seriam "válidos".
+- **Força bruta:** um código de 6 dígitos tem só 1 milhão de combinações, por isso cada
+  desafio aceita no máximo 5 erros (veja [Decisões de segurança](#decisões-de-segurança)).
+
+> **Por que isso funciona offline?** O app não fala com o servidor: ele só precisa do segredo,
+> guardado no setup, e do relógio do celular. Por isso o Google Authenticator funciona em modo
+> avião.
 
 ---
 
@@ -493,3 +593,128 @@ Também foram verificados:
   preciso um prefixo de versão no `encrypted_secret` e um job de recriptografia.
 - **Duplicação de cookies:** o `SessionController` ainda tem a própria lógica de cookies;
   ele pode passar a usar o `AuthCookieWriter`.
+
+
+---
+
+## Passo a passo: usando a API pelos endpoints
+
+Roteiro para testar o fluxo inteiro pelo **Scalar** (`http://localhost:<APP_PORT>/api/v1/scalar`)
+ou por qualquer cliente HTTP.
+
+### Antes de começar
+
+- Suba o banco (`docker compose up -d`) e confira se `MFA_ENCRYPTION_KEY` está no
+  `framework/env.properties`. Sem ela a aplicação não inicia.
+- Cadastre um **e-mail real**: o código de verificação é enviado pelo SMTP configurado.
+- Use **Chrome ou Firefox**. Os cookies de sessão são `Secure`, e esses navegadores os aceitam
+  em `http://localhost`; o Safari pode descartá-los.
+- Tenha um app autenticador no celular (Google Authenticator, Microsoft Authenticator, Authy...).
+
+### Primeiro acesso
+
+**1. Cadastro: `POST /auth/sign-up`**
+
+```json
+{ "name": "João Silva", "email": "joao@email.com", "password": "MinhaSenha123!" }
+```
+
+Você recebe por e-mail um **código de verificação** de 6 dígitos, válido por 10 minutos.
+
+**2. Verificar o e-mail: `POST /auth/verify-email`**
+
+```json
+{ "email": "joao@email.com", "codeOtp": "123456" }
+```
+
+Copie o `mfaToken` da resposta. O `status` vem como `MFA_SETUP_REQUIRED`.
+
+```json
+{ "data": { "status": "MFA_SETUP_REQUIRED", "mfaToken": "q8m1Yt3...", "expiresAt": "..." } }
+```
+
+**3. Gerar o segredo: `POST /auth/mfa/totp/setup`**
+
+```json
+{ "mfaToken": "q8m1Yt3..." }
+```
+
+A resposta traz `secret`, `otpAuthUri` e `qrCode`. Há duas formas de vincular o app:
+
+- **Mais fácil:** no Google Authenticator, escolha **"Inserir chave de configuração"** e cole o
+  campo `secret`. O tipo é "Baseado em tempo".
+- **Pelo QR code:** copie o valor de `qrCode` (`data:image/png;base64,...`) e **cole na barra de
+  endereço do navegador**. A imagem do QR aparece e você escaneia com o celular.
+
+O app passa a mostrar "Financial API (joao@email.com)" com um código que muda a cada 30 s.
+
+**4. Confirmar o vínculo: `POST /auth/mfa/totp/setup/confirm`**
+
+```json
+{ "mfaToken": "q8m1Yt3...", "code": "482913" }
+```
+
+O `code` é o que está aparecendo no app agora. Com isso:
+
+- a **sessão é criada** (cookies `access_token` e `refresh_token`);
+- você recebe os **10 códigos de recuperação**. **Guarde-os agora**, porque eles não aparecem
+  de novo;
+- chega o e-mail "MFA ativado".
+
+### Login do dia a dia
+
+**5. Senha: `POST /auth/sign-in`**
+
+```json
+{ "email": "joao@email.com", "password": "MinhaSenha123!" }
+```
+
+Resposta: `status: "MFA_REQUIRED"` e um **novo** `mfaToken`.
+
+**6. Código do app: `POST /auth/mfa/totp/verify`**
+
+```json
+{ "mfaToken": "<novo mfaToken>", "code": "731045" }
+```
+
+A sessão é criada e chega o e-mail de novo acesso.
+
+### Perdi o celular
+
+No passo 6, use **`POST /auth/mfa/recovery`** em vez do `/totp/verify`:
+
+```json
+{ "mfaToken": "<mfaToken do sign-in>", "recoveryCode": "q3k9-a8f2-m1x7-p0d4" }
+```
+
+Cada código de recuperação funciona **uma vez**. Se você também perdeu os códigos, só o
+admin pode resetar o MFA (passo seguinte).
+
+### Reset pelo admin
+
+1. Torne um usuário admin direto no banco:
+   `update tb_users set role='ADMIN' where email='admin@email.com';`
+   e **faça login de novo com ele**, porque o papel vai dentro do JWT.
+2. No DevTools do navegador, em **Application → Cookies**, copie o valor de `XSRF-TOKEN`.
+3. Chame **`POST /admin/users/{userId}/mfa/reset`** com o header
+   `X-XSRF-TOKEN: <valor copiado>` e o corpo:
+
+   ```json
+   { "reason": "Ticket 123 - identidade confirmada" }
+   ```
+
+4. O usuário afetado volta para `MFA_SETUP_REQUIRED`: no próximo login ele refaz os passos 3 e 4.
+
+São necessários **dois usuários**, porque um admin não pode resetar o próprio MFA.
+
+### Dicas e erros comuns
+
+| Situação | O que fazer |
+|----------|-------------|
+| `MFA token is expired...` | O `mfaToken` dura **5 minutos** e só pode ser usado uma vez. Repita o `sign-in` (ou o `verify-email`, no primeiro acesso) |
+| `Invalid MFA code` | Espere o próximo código do app. Se o erro continuar, confira se o relógio do celular está no horário automático |
+| `Too many invalid MFA codes` | Foram 5 erros nesse desafio. Faça o `sign-in` de novo |
+| `MFA token is invalid` | O token foi usado no endpoint errado (ex.: token de setup no `/totp/verify`) ou um `sign-in` mais novo o substituiu |
+| `409 ... concurrent request` | Duas requisições com o mesmo token ao mesmo tempo. Tente de novo |
+| Endpoint autenticado retorna 401 | Os cookies não foram enviados. Use Chrome/Firefox; no Scalar, **não** use o botão de autenticação "Bearer", porque a API lê o cookie, não o header |
+| Admin retorna 403 | Falta o header `X-XSRF-TOKEN`, ou o usuário não é `ADMIN` (refaça o login depois de mudar o papel) |

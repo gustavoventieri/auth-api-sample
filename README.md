@@ -92,7 +92,7 @@ Essa separação garante que as regras de autenticação (ex.: "refresh token ex
 
 - **Cadastro (Sign Up)** com hashing de senha (BCrypt) e envio de **código OTP** por e-mail para verificação de conta.
 - **Verificação de e-mail** com o código OTP, ativando a conta e liberando a configuração obrigatória do MFA.
-- **MFA obrigatório com TOTP** (Google Authenticator, Microsoft Authenticator, Authy...): login em duas etapas, QR code para vincular o app, códigos de recuperação de uso único, proteção contra replay e bloqueio após 5 códigos errados. Veja [docs/mfa-totp.md](docs/mfa-totp.md) e o fluxo completo em [docs/authentication-flow.md](docs/authentication-flow.md).
+- **MFA obrigatório com TOTP** (Google Authenticator, Microsoft Authenticator, Authy...): login em duas etapas, QR code para vincular o app, códigos de recuperação de uso único, proteção contra replay e bloqueio após 5 códigos errados. Veja [docs/mfa-totp.md](docs/mfa-totp.md).
 - **Reset de MFA pelo admin** para quem perdeu o celular e os códigos de recuperação, com auditoria, revogação de sessões e aviso por e-mail.
 - **Login (Sign In)** em duas etapas (senha + código TOTP), com geração de **Access Token (JWT)** de curta duração e **Refresh Token** de longa duração, entregues via cookies `httpOnly`/`secure`/`SameSite=Strict`.
 - **Refresh de sessão** com rotação e validação de refresh token contra hash armazenado no banco.
