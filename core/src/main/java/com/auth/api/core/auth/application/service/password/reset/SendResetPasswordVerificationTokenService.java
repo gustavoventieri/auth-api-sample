@@ -1,4 +1,4 @@
-package com.auth.api.core.auth.application.service;
+package com.auth.api.core.auth.application.service.password.reset;
 
 import com.auth.api.core.auth.application.port.in.password.reset.GenerateResetPasswordVerificationTokenUseCase;
 import com.auth.api.core.auth.application.port.in.password.reset.HashResetPasswordVerificationTokenUseCase;

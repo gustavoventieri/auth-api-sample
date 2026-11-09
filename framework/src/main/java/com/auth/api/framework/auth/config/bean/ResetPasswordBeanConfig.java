@@ -7,10 +7,10 @@ import com.auth.api.core.auth.application.port.in.password.reset.SendResetPasswo
 import com.auth.api.core.auth.application.port.in.password.reset.UpdateResetPasswordUseCase;
 import com.auth.api.core.auth.application.port.in.password.reset.VerifyResetPasswordVerificationTokenUseCase;
 import com.auth.api.core.auth.application.port.out.ResetPasswordVerificationTokenPersistencePort;
-import com.auth.api.core.auth.application.service.ResetPasswordTokenValidator;
-import com.auth.api.core.auth.application.service.SendResetPasswordVerificationTokenService;
-import com.auth.api.core.auth.application.service.UpdateResetPasswordService;
-import com.auth.api.core.auth.application.service.VerifyResetPasswordVerificationTokenService;
+import com.auth.api.core.auth.application.service.password.reset.ResetPasswordTokenValidator;
+import com.auth.api.core.auth.application.service.password.reset.SendResetPasswordVerificationTokenService;
+import com.auth.api.core.auth.application.service.password.reset.UpdateResetPasswordService;
+import com.auth.api.core.auth.application.service.password.reset.VerifyResetPasswordVerificationTokenService;
 import com.auth.api.core.shared.email.EmailPort;
 import com.auth.api.core.shared.email.EmailTemplateUseCase;
 import com.auth.api.core.shared.transaction.TransactionManager;

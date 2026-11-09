@@ -1,5 +1,6 @@
-package com.auth.api.core.auth.application.service;
+package com.auth.api.core.auth.application.service.password.reset;
 
+import com.auth.api.core.auth.application.dto.response.ValidResetPasswordToken;
 import com.auth.api.core.auth.application.port.in.password.reset.HashResetPasswordVerificationTokenUseCase;
 import com.auth.api.core.auth.application.port.out.ResetPasswordVerificationTokenPersistencePort;
 import com.auth.api.core.auth.domain.ResetPasswordVerificationTokenDomain;
@@ -12,11 +13,6 @@ import static com.auth.api.core.shared.util.SecurityUtils.constantTimeEquals;
 import static com.auth.api.core.shared.util.ValidationUtils.requireNotBlank;
 
 public class ResetPasswordTokenValidator {
-
-    public record ValidResetPasswordToken(
-            UserDomain user,
-            ResetPasswordVerificationTokenDomain token
-    ) {}
 
     private final UserAuthenticationPersistencePort userAuthenticationPersistencePort;
     private final ResetPasswordVerificationTokenPersistencePort tokenPersistencePort;

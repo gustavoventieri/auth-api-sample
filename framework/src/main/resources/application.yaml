@@ -59,3 +59,8 @@ app:
   security:
     bcrypt:
       strength: ${BCRYPT_FACTOR}
+    mfa:
+      # Nome exibido no Google Authenticator / Authy / etc.
+      issuer: ${MFA_ISSUER:Financial API}
+      # Chave AES (Base64, 32 bytes) para criptografar os segredos TOTP. Gere com: openssl rand -base64 32
+      encryption-key: ${MFA_ENCRYPTION_KEY}

@@ -1,9 +1,9 @@
-package com.auth.api.core.auth.application.service;
+package com.auth.api.core.auth.application.service.password.reset;
 
+import com.auth.api.core.auth.application.dto.response.ValidResetPasswordToken;
 import com.auth.api.core.auth.application.port.in.password.HashPasswordUseCase;
 import com.auth.api.core.auth.application.port.in.password.reset.UpdateResetPasswordUseCase;
 import com.auth.api.core.auth.application.port.out.ResetPasswordVerificationTokenPersistencePort;
-import com.auth.api.core.auth.application.service.ResetPasswordTokenValidator.ValidResetPasswordToken;
 import com.auth.api.core.auth.domain.ResetPasswordVerificationTokenDomain;
 import com.auth.api.core.shared.email.EmailMessage;
 import com.auth.api.core.shared.email.EmailPort;

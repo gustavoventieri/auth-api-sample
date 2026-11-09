@@ -1,12 +1,10 @@
 package com.auth.api.core.auth.application.port.in.emailVerification;
 
-import com.auth.api.core.auth.application.dto.response.AuthResponse;
+import com.auth.api.core.auth.application.dto.response.MfaChallengeResponse;
 
 public interface VerifyEmailVerificationTokenUseCase {
-    AuthResponse execute(
+    MfaChallengeResponse execute(
             String codeOtp,
-            String email,
-            String ip,
-            String device
+            String email
     );
 }

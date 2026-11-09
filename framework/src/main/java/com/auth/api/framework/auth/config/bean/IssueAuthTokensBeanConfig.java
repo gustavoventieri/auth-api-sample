@@ -5,7 +5,7 @@ import com.auth.api.core.auth.application.port.in.refreshToken.GenerateRefreshTo
 import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.sign.IssueAuthTokensUseCase;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;
-import com.auth.api.core.auth.application.service.IssueAuthTokensService;
+import com.auth.api.core.auth.application.service.sign.IssueAuthTokensService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

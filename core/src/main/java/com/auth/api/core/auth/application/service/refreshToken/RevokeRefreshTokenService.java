@@ -1,4 +1,4 @@
-package com.auth.api.core.auth.application.service;
+package com.auth.api.core.auth.application.service.refreshToken;
 
 import com.auth.api.core.auth.application.port.in.refreshToken.RevokeRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.out.RefreshTokenPersistencePort;

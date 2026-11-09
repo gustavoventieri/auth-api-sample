@@ -1,9 +1,9 @@
-package com.auth.api.core.auth.application.service;
+package com.auth.api.core.auth.application.service.emailVerification;
 
-import com.auth.api.core.auth.application.dto.response.AuthResponse;
+import com.auth.api.core.auth.application.dto.response.MfaChallengeResponse;
 import com.auth.api.core.auth.application.port.in.emailVerification.HashEmailVerificationTokenUseCase;
 import com.auth.api.core.auth.application.port.in.emailVerification.VerifyEmailVerificationTokenUseCase;
-import com.auth.api.core.auth.application.port.in.sign.IssueAuthTokensUseCase;
+import com.auth.api.core.auth.application.port.in.mfa.IssueMfaChallengeUseCase;
 import com.auth.api.core.auth.application.port.out.EmailVerificationTokenPort;
 import com.auth.api.core.auth.domain.EmailVerificationTokenDomain;
 import com.auth.api.core.shared.email.EmailMessage;
@@ -23,7 +23,7 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
     private final UserAuthenticationPersistencePort userAuthenticationPort;
     private final EmailVerificationTokenPort emailVerificationTokenPort;
     private final HashEmailVerificationTokenUseCase hashEmailVerificationTokenUseCase;
-    private final IssueAuthTokensUseCase issueAuthTokensUseCase;
+    private final IssueMfaChallengeUseCase issueMfaChallengeUseCase;
     private final TransactionManager transactionManager;
     private final EmailPort emailPort;
     private final EmailTemplateUseCase emailTemplateUseCase;
@@ -32,7 +32,7 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
             UserAuthenticationPersistencePort userAuthenticationPort,
             EmailVerificationTokenPort emailVerificationTokenPort,
             HashEmailVerificationTokenUseCase hashEmailVerificationTokenUseCase,
-            IssueAuthTokensUseCase issueAuthTokensUseCase,
+            IssueMfaChallengeUseCase issueMfaChallengeUseCase,
             TransactionManager transactionManager,
             EmailPort emailPort,
             EmailTemplateUseCase emailTemplateUseCase
@@ -40,14 +40,14 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
         this.userAuthenticationPort = userAuthenticationPort;
         this.emailVerificationTokenPort = emailVerificationTokenPort;
         this.hashEmailVerificationTokenUseCase = hashEmailVerificationTokenUseCase;
-        this.issueAuthTokensUseCase = issueAuthTokensUseCase;
+        this.issueMfaChallengeUseCase = issueMfaChallengeUseCase;
         this.transactionManager = transactionManager;
         this.emailPort = emailPort;
         this.emailTemplateUseCase = emailTemplateUseCase;
     }
 
     @Override
-    public AuthResponse execute(String otpCode, String email, String ip, String device) {
+    public MfaChallengeResponse execute(String otpCode, String email) {
 
         UserDomain userDomain = userAuthenticationPort.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(INVALID_CODE));
@@ -70,10 +70,11 @@ public class VerifyEmailVerificationTokenService implements VerifyEmailVerificat
         UserDomain verifiedUser = userDomain.verify();
         EmailVerificationTokenDomain usedToken = token.markAsUsed();
 
-        AuthResponse response = transactionManager.execute(() -> {
+        // MFA é obrigatório: verificar o e-mail não cria sessão, apenas libera o setup do TOTP.
+        MfaChallengeResponse response = transactionManager.execute(() -> {
             userAuthenticationPort.save(verifiedUser);
             emailVerificationTokenPort.save(usedToken);
-            return issueAuthTokensUseCase.execute(verifiedUser, ip, device);
+            return issueMfaChallengeUseCase.execute(verifiedUser);
         });
 
         emailPort.send(

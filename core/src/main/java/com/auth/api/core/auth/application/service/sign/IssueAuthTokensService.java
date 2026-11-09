@@ -1,4 +1,4 @@
-package com.auth.api.core.auth.application.service;
+package com.auth.api.core.auth.application.service.sign;
 
 import com.auth.api.core.auth.application.dto.response.AuthResponse;
 import com.auth.api.core.auth.application.port.in.accessToken.GenerateAccessTokenUseCase;

@@ -1,4 +1,4 @@
-package com.auth.api.core.auth.application.service;
+package com.auth.api.core.auth.application.service.sign;
 
 import com.auth.api.core.auth.application.port.in.refreshToken.HashRefreshTokenUseCase;
 import com.auth.api.core.auth.application.port.in.sign.SignOutUseCase;
